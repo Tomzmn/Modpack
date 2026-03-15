@@ -1,4 +1,5 @@
 import os
+import re
 import base64
 import tomllib
 import asyncio
@@ -25,7 +26,7 @@ HTML = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Packwiz Client Mod Manager</title>
+<title>Packwiz Mod Manager</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -63,6 +64,32 @@ HTML = """<!DOCTYPE html>
     color: var(--text-muted);
   }
   .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--text-muted);
+    padding: 0.6rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text); background: transparent; }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: transparent; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
   @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
   .panel {
@@ -129,18 +156,23 @@ HTML = """<!DOCTYPE html>
     color: var(--text-muted);
   }
   button.ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+  button.success-btn { background: var(--success); }
+  button.success-btn:hover { background: #3d9e6d; }
   .mod-list { display: flex; flex-direction: column; gap: 0.6rem; }
   .mod-item {
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .mod-item:hover { border-color: var(--accent); }
+  .mod-item-row {
     padding: 0.75rem 1rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    transition: border-color 0.2s;
   }
-  .mod-item:hover { border-color: var(--accent); }
   .mod-icon {
     width: 40px;
     height: 40px;
@@ -162,7 +194,7 @@ HTML = """<!DOCTYPE html>
   }
   .mod-info { flex: 1; min-width: 0; }
   .mod-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mod-meta { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem; }
+  .mod-meta { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
   .mod-desc { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mod-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
   .already-badge {
@@ -220,43 +252,175 @@ HTML = """<!DOCTYPE html>
   a { color: var(--accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
   .refresh-btn { margin-left: auto; }
+
+  /* Side badges */
+  .side-badge {
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    display: inline-block;
+  }
+  .side-client { background: rgba(108,99,255,0.18); border: 1px solid #6c63ff; color: #a39fff; }
+  .side-server { background: rgba(76,175,130,0.18); border: 1px solid #4caf82; color: #6dd6a6; }
+  .side-both { background: rgba(120,120,140,0.18); border: 1px solid #5a5a7a; color: #a0a0c0; }
+  .optional-badge {
+    background: rgba(255,193,7,0.15);
+    border: 1px solid #ffc107;
+    color: #ffd54f;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .default-badge {
+    background: rgba(255,152,0,0.15);
+    border: 1px solid #ff9800;
+    color: #ffb74d;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  /* Inline edit panel */
+  .edit-panel {
+    display: none;
+    border-top: 1px solid var(--border);
+    background: #1e2235;
+    padding: 1rem 1.25rem;
+    gap: 1.25rem;
+    flex-direction: column;
+  }
+  .edit-panel.open { display: flex; }
+  .edit-panel-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .edit-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; min-width: 70px; }
+  .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+
+  /* Segmented button */
+  .seg-group { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg-btn {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: var(--text-muted);
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-right: 1px solid var(--border);
+  }
+  .seg-btn:last-child { border-right: none; }
+  .seg-btn:hover { background: var(--surface2); color: var(--text); }
+  .seg-btn.active { background: var(--accent); color: #fff; }
+
+  /* Toggle switch */
+  .toggle-wrap { display: flex; align-items: center; gap: 0.6rem; }
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-slider:before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(18px); background: #fff; }
+  .toggle-label { font-size: 0.85rem; color: var(--text-muted); }
+
+  /* All mods full-width panel */
+  .all-mods-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .filter-bar {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .filter-bar input { max-width: 320px; flex: none; }
+  .filter-count { color: var(--text-muted); font-size: 0.85rem; margin-left: auto; }
 </style>
 </head>
 <body>
 <header>
   <div>
     <h1>Packwiz Mod Manager</h1>
-    <div class="subtitle">Client-side mod management for 1.20.1 / Forge</div>
+    <div class="subtitle">Mod management for 1.20.1 / Forge</div>
   </div>
   <div class="repo-tag" id="repoTag">Loading...</div>
 </header>
 <div class="container">
-  <div class="grid">
-    <!-- Left: installed mods -->
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Installed Client Mods</h2>
-        <span class="badge" id="modCount">0</span>
-        <button class="ghost sm refresh-btn" onclick="loadMods()" title="Refresh">Refresh</button>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('client')">Client Mods</button>
+    <button class="tab-btn" onclick="switchTab('all')">All Mods</button>
+  </div>
+
+  <!-- CLIENT MODS TAB -->
+  <div class="tab-panel active" id="tab-client">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Installed Client Mods</h2>
+          <span class="badge" id="modCount">0</span>
+          <button class="ghost sm refresh-btn" onclick="loadMods()" title="Refresh">Refresh</button>
+        </div>
+        <div class="panel-body">
+          <div id="modList" class="mod-list">
+            <div class="loading"><div class="spinner"></div> Loading mods...</div>
+          </div>
+        </div>
       </div>
-      <div class="panel-body">
-        <div id="modList" class="mod-list">
-          <div class="loading"><div class="spinner"></div> Loading mods...</div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Search Modrinth</h2>
+        </div>
+        <div class="panel-body">
+          <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search for mods (1.20.1 / Forge)..." onkeydown="if(event.key==='Enter') doSearch()"/>
+            <button onclick="doSearch()" id="searchBtn">Search</button>
+          </div>
+          <div id="searchResults" class="mod-list">
+            <div class="empty">Search for mods to add to your pack.</div>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Right: search -->
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Search Modrinth</h2>
+  </div>
+
+  <!-- ALL MODS TAB -->
+  <div class="tab-panel" id="tab-all">
+    <div class="all-mods-panel">
+      <div class="filter-bar">
+        <input type="text" id="allModsFilter" placeholder="Filter mods by name..." oninput="filterAllMods()"/>
+        <button class="ghost sm" onclick="loadAllMods()">Refresh</button>
+        <span class="filter-count" id="allModsCount"></span>
       </div>
       <div class="panel-body">
-        <div class="search-bar">
-          <input type="text" id="searchInput" placeholder="Search for mods (1.20.1 / Forge)..." onkeydown="if(event.key==='Enter') doSearch()"/>
-          <button onclick="doSearch()" id="searchBtn">Search</button>
-        </div>
-        <div id="searchResults" class="mod-list">
-          <div class="empty">Search for mods to add to your pack.</div>
+        <div id="allModsList" class="mod-list">
+          <div class="loading"><div class="spinner"></div> Loading all mods...</div>
         </div>
       </div>
     </div>
@@ -264,8 +428,23 @@ HTML = """<!DOCTYPE html>
 </div>
 <div class="toast-container" id="toasts"></div>
 <script>
-let installedSlugs = new Set();
-let installedMods = [];
+var installedSlugs = new Set();
+var installedMods = [];
+var allMods = [];
+var activeTab = 'client';
+var allModsLoaded = false;
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+    b.classList.toggle('active', (i === 0 && tab === 'client') || (i === 1 && tab === 'all'));
+  });
+  document.getElementById('tab-client').classList.toggle('active', tab === 'client');
+  document.getElementById('tab-all').classList.toggle('active', tab === 'all');
+  if (tab === 'all' && !allModsLoaded) {
+    loadAllMods();
+  }
+}
 
 function toast(msg, type) {
   type = type || 'success';
@@ -295,6 +474,7 @@ function escHtml(s) {
     .replace(/'/g,'&#39;');
 }
 
+/* ===== CLIENT MODS ===== */
 async function loadMods() {
   document.getElementById('modList').innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
   try {
@@ -304,7 +484,7 @@ async function loadMods() {
     installedMods = data;
     installedSlugs = new Set(data.map(function(m) { return m.slug; }));
     document.getElementById('modCount').textContent = data.length;
-    document.getElementById('repoTag').textContent = data.length + ' mods in pack';
+    document.getElementById('repoTag').textContent = data.length + ' client mods in pack';
     renderMods(data);
     refreshSearchBadges();
   } catch(e) {
@@ -318,16 +498,18 @@ function renderMods(mods) {
   if (!mods.length) { el.innerHTML = '<div class="empty">No client mods installed yet.</div>'; return; }
   el.innerHTML = mods.map(function(m) {
     return '<div class="mod-item" id="mod-' + escHtml(m.slug) + '">' +
-      (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">M</div>') +
-      '<div class="mod-info">' +
-        '<div class="mod-name">' + escHtml(m.name) + '</div>' +
-        '<div class="mod-meta">' +
-          (m.version ? escHtml(m.version) : '') +
-          (m.mod_id ? ' &middot; <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener">Modrinth</a>' : '') +
+      '<div class="mod-item-row">' +
+        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        '<div class="mod-info">' +
+          '<div class="mod-name">' + escHtml(m.name) + '</div>' +
+          '<div class="mod-meta">' +
+            (m.version ? escHtml(m.version) : '') +
+            (m.mod_id ? ' &middot; <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener">Modrinth</a>' : '') +
+          '</div>' +
         '</div>' +
-      '</div>' +
-      '<div class="mod-actions">' +
-        '<button class="sm danger" onclick="removeMod(\'' + escHtml(m.slug) + '\', \'' + escHtml(m.name.replace(/'/g,'')) + '\')" id="rm-' + escHtml(m.slug) + '">Remove</button>' +
+        '<div class="mod-actions">' +
+          '<button class="sm danger" onclick="removeMod(\'' + escHtml(m.slug) + '\', \'' + escHtml(m.name.replace(/'/g,'')) + '\')" id="rm-' + escHtml(m.slug) + '">Remove</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -375,17 +557,19 @@ function renderSearch(results) {
   el.innerHTML = results.map(function(r) {
     var already = installedSlugs.has(r.slug);
     return '<div class="mod-item" id="sr-' + escHtml(r.slug) + '">' +
-      (r.icon ? '<img class="mod-icon" src="' + escHtml(r.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">M</div>') +
-      '<div class="mod-info">' +
-        '<div class="mod-name">' + escHtml(r.name) + '</div>' +
-        '<div class="mod-desc">' + escHtml(r.description || '') + '</div>' +
-        '<div class="mod-meta"><span class="dl-count">' + fmtDownloads(r.downloads) + ' downloads</span></div>' +
-      '</div>' +
-      '<div class="mod-actions">' +
-        (already
-          ? '<span class="already-badge">Added</span>'
-          : '<button class="sm" onclick="addMod(\'' + escHtml(r.project_id) + '\', \'' + escHtml(r.slug) + '\', \'' + escHtml(r.name.replace(/'/g,'')) + '\')" id="add-' + escHtml(r.slug) + '">Add</button>'
-        ) +
+      '<div class="mod-item-row">' +
+        (r.icon ? '<img class="mod-icon" src="' + escHtml(r.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        '<div class="mod-info">' +
+          '<div class="mod-name">' + escHtml(r.name) + '</div>' +
+          '<div class="mod-desc">' + escHtml(r.description || '') + '</div>' +
+          '<div class="mod-meta"><span class="dl-count">' + fmtDownloads(r.downloads) + ' downloads</span></div>' +
+        '</div>' +
+        '<div class="mod-actions">' +
+          (already
+            ? '<span class="already-badge">Added</span>'
+            : '<button class="sm" onclick="addMod(\'' + escHtml(r.project_id) + '\', \'' + escHtml(r.slug) + '\', \'' + escHtml(r.name.replace(/'/g,'')) + '\')" id="add-' + escHtml(r.slug) + '">Add</button>'
+          ) +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -422,6 +606,181 @@ async function addMod(projectId, slug, name) {
   }
 }
 
+/* ===== ALL MODS ===== */
+async function loadAllMods() {
+  document.getElementById('allModsList').innerHTML = '<div class="loading"><div class="spinner"></div> Loading all mods...</div>';
+  document.getElementById('allModsCount').textContent = '';
+  allModsLoaded = false;
+  try {
+    var res = await fetch('/api/all-mods');
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to load mods');
+    allMods = data;
+    allModsLoaded = true;
+    renderAllMods(allMods);
+  } catch(e) {
+    document.getElementById('allModsList').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
+    toast('Failed to load all mods: ' + e.message, 'error');
+  }
+}
+
+function filterAllMods() {
+  var q = document.getElementById('allModsFilter').value.trim().toLowerCase();
+  if (!q) { renderAllMods(allMods); return; }
+  var filtered = allMods.filter(function(m) {
+    return m.name.toLowerCase().includes(q) || m.slug.toLowerCase().includes(q);
+  });
+  renderAllMods(filtered);
+}
+
+function sideBadgeClass(side) {
+  if (side === 'client') return 'side-client';
+  if (side === 'server') return 'side-server';
+  return 'side-both';
+}
+
+function renderAllMods(mods) {
+  var el = document.getElementById('allModsList');
+  document.getElementById('allModsCount').textContent = mods.length + ' mod' + (mods.length !== 1 ? 's' : '');
+  if (!mods.length) { el.innerHTML = '<div class="empty">No mods found.</div>'; return; }
+  el.innerHTML = mods.map(function(m) {
+    var sid = m.side || 'both';
+    var isOpt = !!m.optional;
+    var isDef = !!m.default;
+    var slug = m.slug;
+    return '<div class="mod-item" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
+      '<div class="mod-item-row">' +
+        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        '<div class="mod-info">' +
+          '<div class="mod-name">' + escHtml(m.name) + '</div>' +
+          '<div class="mod-meta">' +
+            '<span class="side-badge ' + sideBadgeClass(sid) + '">' + escHtml(sid) + '</span>' +
+            (isOpt ? '<span class="optional-badge">optional</span>' : '') +
+            (isOpt && isDef ? '<span class="default-badge">default on</span>' : '') +
+            (m.mod_id ? ' <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener" style="font-size:0.78rem">Modrinth</a>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="mod-actions">' +
+          '<button class="ghost sm" onclick="toggleEditPanel(\'' + escHtml(slug) + '\')">Edit</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="edit-panel" id="edit-' + escHtml(slug) + '">' +
+        '<div class="edit-panel-row">' +
+          '<span class="edit-label">Side</span>' +
+          '<div class="seg-group" id="seg-' + escHtml(slug) + '">' +
+            '<button class="seg-btn' + (sid==='client'?' active':'') + '" onclick="setSide(\'' + escHtml(slug) + '\',\'client\')">client</button>' +
+            '<button class="seg-btn' + (sid==='server'?' active':'') + '" onclick="setSide(\'' + escHtml(slug) + '\',\'server\')">server</button>' +
+            '<button class="seg-btn' + (sid==='both'?' active':'') + '" onclick="setSide(\'' + escHtml(slug) + '\',\'both\')">both</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="edit-panel-row">' +
+          '<span class="edit-label">Optional</span>' +
+          '<label class="toggle"><input type="checkbox" id="opt-' + escHtml(slug) + '" ' + (isOpt?'checked':'') + ' onchange="onOptionalChange(\'' + escHtml(slug) + '\')"/><span class="toggle-slider"></span></label>' +
+          '<span class="toggle-label" id="opt-label-' + escHtml(slug) + '">' + (isOpt?'Yes':'No') + '</span>' +
+        '</div>' +
+        '<div class="edit-panel-row" id="default-row-' + escHtml(slug) + '" style="' + (!isOpt?'display:none':'') + '">' +
+          '<span class="edit-label">Default</span>' +
+          '<label class="toggle"><input type="checkbox" id="def-' + escHtml(slug) + '" ' + (isDef?'checked':'') + '/><span class="toggle-slider"></span></label>' +
+          '<span class="toggle-label" id="def-label-' + escHtml(slug) + '">' + (isDef?'Yes':'No') + '</span>' +
+        '</div>' +
+        '<div class="edit-actions">' +
+          '<button class="sm success-btn" onclick="saveMod(\'' + escHtml(slug) + '\', \'' + escHtml(m.name.replace(/'/g,'')) + '\')" id="save-' + escHtml(slug) + '">Save</button>' +
+          '<button class="sm ghost" onclick="toggleEditPanel(\'' + escHtml(slug) + '\')">Cancel</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // wire up default label toggles
+  mods.forEach(function(m) {
+    var defInput = document.getElementById('def-' + m.slug);
+    if (defInput) {
+      defInput.addEventListener('change', function() {
+        var lbl = document.getElementById('def-label-' + m.slug);
+        if (lbl) lbl.textContent = defInput.checked ? 'Yes' : 'No';
+      });
+    }
+  });
+}
+
+function toggleEditPanel(slug) {
+  var panel = document.getElementById('edit-' + slug);
+  if (!panel) return;
+  panel.classList.toggle('open');
+}
+
+function setSide(slug, side) {
+  var grp = document.getElementById('seg-' + slug);
+  if (!grp) return;
+  grp.querySelectorAll('.seg-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent.trim() === side);
+  });
+}
+
+function getSelectedSide(slug) {
+  var grp = document.getElementById('seg-' + slug);
+  if (!grp) return 'both';
+  var active = grp.querySelector('.seg-btn.active');
+  return active ? active.textContent.trim() : 'both';
+}
+
+function onOptionalChange(slug) {
+  var chk = document.getElementById('opt-' + slug);
+  var lbl = document.getElementById('opt-label-' + slug);
+  var defRow = document.getElementById('default-row-' + slug);
+  if (lbl) lbl.textContent = chk.checked ? 'Yes' : 'No';
+  if (defRow) defRow.style.display = chk.checked ? '' : 'none';
+}
+
+async function saveMod(slug, name) {
+  var btn = document.getElementById('save-' + slug);
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  try {
+    var side = getSelectedSide(slug);
+    var optChk = document.getElementById('opt-' + slug);
+    var defChk = document.getElementById('def-' + slug);
+    var optional = optChk ? optChk.checked : false;
+    var defaultOn = defChk ? defChk.checked : false;
+
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ side: side, optional: optional, default: defaultOn })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Save failed');
+    toast('Saved: ' + name);
+    // update local allMods entry
+    var entry = allMods.find(function(m) { return m.slug === slug; });
+    if (entry) {
+      entry.side = side;
+      entry.optional = optional;
+      entry.default = defaultOn;
+    }
+    // close panel
+    var panel = document.getElementById('edit-' + slug);
+    if (panel) panel.classList.remove('open');
+    // re-render just the badges in the row
+    var modItem = document.getElementById('allmod-' + slug);
+    if (modItem) {
+      var metaEl = modItem.querySelector('.mod-meta');
+      if (metaEl) {
+        var modrinthLink = metaEl.querySelector('a') ? metaEl.querySelector('a').outerHTML : '';
+        metaEl.innerHTML =
+          '<span class="side-badge ' + sideBadgeClass(side) + '">' + escHtml(side) + '</span>' +
+          (optional ? '<span class="optional-badge">optional</span>' : '') +
+          (optional && defaultOn ? '<span class="default-badge">default on</span>' : '') +
+          (modrinthLink ? ' ' + modrinthLink : '');
+      }
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+  }
+}
+
+// Initial load
 loadMods();
 </script>
 </body>
@@ -460,6 +819,45 @@ def build_pw_toml(name: str, filename: str, project_id: str, version_id: str, ur
         f'mod-id = "{project_id}"\n'
         f'version = "{version_id}"\n'
     )
+
+
+def patch_toml_content(raw: str, side: str, optional: bool, default_on: bool) -> str:
+    """Patch a .pw.toml string with new side/optional/default values."""
+
+    # 1. Replace side field
+    raw = re.sub(r'^side\s*=\s*"[^"]*"', f'side = "{side}"', raw, flags=re.MULTILINE)
+
+    # 2. Handle [option] section
+    option_block = f'[option]\noptional = true\ndefault = {"true" if default_on else "false"}\n'
+
+    # Check if [option] section already exists
+    option_section_re = re.compile(
+        r'^\[option\][^\[]*',
+        re.MULTILINE | re.DOTALL
+    )
+    # More precise: match [option] up to next section header or end of file
+    option_section_precise = re.compile(
+        r'^\[option\].*?(?=^\[|\Z)',
+        re.MULTILINE | re.DOTALL
+    )
+
+    if optional:
+        if option_section_precise.search(raw):
+            # Replace existing [option] section
+            raw = option_section_precise.sub(option_block, raw, count=1)
+        else:
+            # Append at end
+            if not raw.endswith('\n'):
+                raw += '\n'
+            raw += '\n' + option_block
+    else:
+        # Remove [option] section entirely if it exists
+        if option_section_precise.search(raw):
+            raw = option_section_precise.sub('', raw, count=1)
+        # Clean up any double blank lines left behind
+        raw = re.sub(r'\n{3,}', '\n\n', raw)
+
+    return raw
 
 
 async def github_get_file(client: httpx.AsyncClient, path: str) -> Optional[dict]:
@@ -508,6 +906,63 @@ async def get_modrinth_versions(client: httpx.AsyncClient, project_id: str) -> l
     return r.json()
 
 
+async def fetch_and_parse_entry(client: httpx.AsyncClient, entry: dict, client_only: bool = False) -> Optional[dict]:
+    """Fetch a .pw.toml entry from GitHub and return parsed mod info."""
+    try:
+        download_url = entry.get("download_url")
+        if not download_url:
+            return None
+        fr = await client.get(download_url)
+        if fr.status_code != 200:
+            return None
+        raw = fr.text
+        data = parse_toml_simple(raw)
+        side = data.get("side", "both")
+        if client_only and side != "client":
+            return None
+        slug = entry["name"].replace(".pw.toml", "")
+        mod_id = data.get("update", {}).get("modrinth", {}).get("mod-id", "")
+        version_id = data.get("update", {}).get("modrinth", {}).get("version", "")
+        option = data.get("option", {})
+        return {
+            "slug": slug,
+            "name": data.get("name", slug),
+            "version": version_id,
+            "mod_id": mod_id,
+            "sha": entry.get("sha", ""),
+            "side": side,
+            "optional": option.get("optional", False),
+            "default": option.get("default", False),
+            "icon": None,
+        }
+    except Exception:
+        return None
+
+
+async def enrich_icon(client: httpx.AsyncClient, mod: dict) -> dict:
+    if not mod.get("mod_id"):
+        return mod
+    try:
+        proj = await get_modrinth_project(client, mod["mod_id"])
+        mod["icon"] = proj.get("icon_url", "")
+    except Exception:
+        pass
+    return mod
+
+
+async def list_all_pw_files(client: httpx.AsyncClient) -> list:
+    """Return all .pw.toml entries from the mods directory."""
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/mods"
+    r = await client.get(url, headers=gh_headers())
+    if r.status_code == 404:
+        return []
+    if r.status_code == 401:
+        raise HTTPException(401, "GitHub authentication failed — check GITHUB_PAT")
+    r.raise_for_status()
+    entries = r.json()
+    return [e for e in entries if isinstance(e, dict) and e.get("name", "").endswith(".pw.toml")]
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
     return HTML
@@ -519,58 +974,32 @@ async def list_mods():
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
 
     async with httpx.AsyncClient(timeout=30) as client:
-        url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/mods"
-        r = await client.get(url, headers=gh_headers())
-        if r.status_code == 404:
-            return []
-        if r.status_code == 401:
-            raise HTTPException(401, "GitHub authentication failed — check GITHUB_PAT")
-        r.raise_for_status()
-        entries = r.json()
+        pw_files = await list_all_pw_files(client)
 
-        pw_files = [e for e in entries if isinstance(e, dict) and e.get("name", "").endswith(".pw.toml")]
-
-        async def fetch_and_parse(entry: dict):
-            try:
-                download_url = entry.get("download_url")
-                if not download_url:
-                    return None
-                fr = await client.get(download_url)
-                if fr.status_code != 200:
-                    return None
-                raw = fr.text
-                data = parse_toml_simple(raw)
-                if data.get("side") != "client":
-                    return None
-                slug = entry["name"].replace(".pw.toml", "")
-                mod_id = data.get("update", {}).get("modrinth", {}).get("mod-id", "")
-                version_id = data.get("update", {}).get("modrinth", {}).get("version", "")
-                return {
-                    "slug": slug,
-                    "name": data.get("name", slug),
-                    "version": version_id,
-                    "mod_id": mod_id,
-                    "sha": entry.get("sha", ""),
-                    "icon": None,
-                }
-            except Exception:
-                return None
-
-        tasks = [fetch_and_parse(e) for e in pw_files]
+        tasks = [fetch_and_parse_entry(client, e, client_only=True) for e in pw_files]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         mods = [r for r in results if isinstance(r, dict)]
 
-        async def enrich_icon(mod: dict):
-            if not mod.get("mod_id"):
-                return mod
-            try:
-                proj = await get_modrinth_project(client, mod["mod_id"])
-                mod["icon"] = proj.get("icon_url", "")
-            except Exception:
-                pass
-            return mod
+        mods = list(await asyncio.gather(*[enrich_icon(client, m) for m in mods], return_exceptions=False))
+        mods = [m for m in mods if isinstance(m, dict)]
+        mods = sorted(mods, key=lambda m: m["name"].lower())
 
-        mods = list(await asyncio.gather(*[enrich_icon(m) for m in mods], return_exceptions=False))
+    return mods
+
+
+@app.get("/api/all-mods")
+async def list_all_mods():
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        pw_files = await list_all_pw_files(client)
+
+        tasks = [fetch_and_parse_entry(client, e, client_only=False) for e in pw_files]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        mods = [r for r in results if isinstance(r, dict)]
+
+        mods = list(await asyncio.gather(*[enrich_icon(client, m) for m in mods], return_exceptions=False))
         mods = [m for m in mods if isinstance(m, dict)]
         mods = sorted(mods, key=lambda m: m["name"].lower())
 
@@ -614,13 +1043,18 @@ class AddModRequest(BaseModel):
     version_id: Optional[str] = None
 
 
+class PatchModRequest(BaseModel):
+    side: str
+    optional: bool
+    default: bool
+
+
 @app.post("/api/mods")
 async def add_mod(req: AddModRequest):
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
 
     async with httpx.AsyncClient(timeout=30) as client:
-        # Get project info
         try:
             project = await get_modrinth_project(client, req.project_id)
         except httpx.HTTPStatusError:
@@ -629,7 +1063,6 @@ async def add_mod(req: AddModRequest):
         slug = project.get("slug", req.project_id)
         name = project.get("title", slug)
 
-        # Pick version
         if req.version_id:
             try:
                 vr = await client.get(f"{MODRINTH_API}/version/{req.version_id}")
@@ -650,7 +1083,6 @@ async def add_mod(req: AddModRequest):
             version = versions[0]
 
         version_id = version.get("id", "")
-
         files = version.get("files", [])
         if not files:
             raise HTTPException(400, "No files found in this version")
@@ -677,6 +1109,44 @@ async def add_mod(req: AddModRequest):
             raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
 
     return {"ok": True, "slug": slug, "name": name, "version_id": version_id}
+
+
+@app.patch("/api/mods/{slug}/settings")
+async def patch_mod_settings(slug: str, req: PatchModRequest):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    valid_sides = {"client", "server", "both"}
+    if req.side not in valid_sides:
+        raise HTTPException(400, f"Invalid side value: {req.side}. Must be one of: {', '.join(valid_sides)}")
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        path = f"mods/{slug}.pw.toml"
+        existing = await github_get_file(client, path)
+        if not existing:
+            raise HTTPException(404, f"Mod file not found: {path}")
+
+        sha = existing["sha"]
+        raw_b64 = existing.get("content", "")
+        try:
+            raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+        except Exception:
+            raise HTTPException(500, "Failed to decode existing file content")
+
+        # Parse to get name for commit message
+        data = parse_toml_simple(raw_content)
+        name = data.get("name", slug)
+
+        # Patch the raw TOML content
+        patched = patch_toml_content(raw_content, req.side, req.optional, req.default)
+
+        commit_msg = f"Update mod settings: {name}"
+        try:
+            await github_put_file(client, path, patched, commit_msg, sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
+
+    return {"ok": True, "slug": slug, "name": name}
 
 
 @app.delete("/api/mods/{slug}")
