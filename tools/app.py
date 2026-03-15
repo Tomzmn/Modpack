@@ -504,6 +504,53 @@ HTML = """<!DOCTYPE html>
     white-space: pre-wrap;
     word-break: break-all;
   }
+
+  /* Docs tab */
+  .docs-panel { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+  .docs-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+  }
+  .docs-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .docs-subtitle {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 1.25rem;
+    margin-bottom: 0.6rem;
+  }
+  .docs-p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.65; margin-bottom: 0.75rem; }
+  .docs-p:last-child { margin-bottom: 0; }
+  .docs-p code, .docs-info code, .docs-warn code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.82rem; color: #a39fff; font-family: 'Consolas', monospace; }
+  .docs-table-wrap { overflow-x: auto; margin: 0.75rem 0; }
+  .docs-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+  .docs-table thead tr { background: var(--surface2); }
+  .docs-table th { text-align: left; padding: 0.55rem 0.9rem; color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  .docs-table td { padding: 0.65rem 0.9rem; color: var(--text-muted); border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  .docs-table td:first-child { white-space: nowrap; }
+  .docs-table tr:last-child td { border-bottom: none; }
+  .docs-badge { border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+  .docs-badge-purple { background: rgba(108,99,255,0.18); border: 1px solid #6c63ff; color: #a39fff; }
+  .docs-badge-green { background: rgba(76,175,130,0.18); border: 1px solid #4caf82; color: #6dd6a6; }
+  .docs-badge-red { background: rgba(224,82,82,0.18); border: 1px solid #e05252; color: #f09090; }
+  .docs-badge-gray { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+  .docs-info { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.3); border-radius: 8px; padding: 0.7rem 1rem; font-size: 0.85rem; color: #a39fff; margin-top: 0.75rem; line-height: 1.5; }
+  .docs-warn { background: rgba(255,152,0,0.08); border: 1px solid rgba(255,152,0,0.3); border-radius: 8px; padding: 0.7rem 1rem; font-size: 0.85rem; color: #ffb74d; margin-top: 0.75rem; line-height: 1.5; }
+  .docs-ol { padding-left: 1.4rem; color: var(--text-muted); font-size: 0.9rem; line-height: 2; margin-bottom: 0.75rem; }
+  .docs-ol li { padding-left: 0.25rem; }
+  .docs-flow { display: flex; flex-direction: column; gap: 0; margin-top: 0.75rem; }
+  .docs-flow-step { display: flex; align-items: center; gap: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.88rem; color: var(--text-muted); }
+  .docs-flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+  .docs-flow-arrow { text-align: center; color: var(--border); font-size: 1.1rem; line-height: 1.2; }
 </style>
 </head>
 <body>
@@ -521,6 +568,7 @@ HTML = """<!DOCTYPE html>
     <button class="tab-btn" id="tabbtn-all">All Mods</button>
     <button class="tab-btn" id="tabbtn-updates">Updates</button>
     <button class="tab-btn" id="tabbtn-server">Server</button>
+    <button class="tab-btn" id="tabbtn-docs">Docs</button>
   </div>
 
   <!-- CLIENT MODS TAB -->
@@ -641,6 +689,150 @@ HTML = """<!DOCTYPE html>
       <div class="log-box" id="srvLogBox"></div>
     </div>
   </div>
+
+  <!-- DOCS TAB -->
+  <div class="tab-panel" id="tab-docs">
+    <div class="docs-panel">
+
+      <div class="docs-section">
+        <h2 class="docs-title">Vue d&apos;ensemble</h2>
+        <p class="docs-p">Cette interface permet de g&eacute;rer le modpack Minecraft 1.20.1 / Forge distribu&eacute; via <strong>packwiz</strong> et <strong>Prism Launcher</strong>. Les mods sont stock&eacute;s dans le repo GitHub <code>Tomzmn/Modpack</code>. Chaque modification faite ici est committ&eacute;e automatiquement sur GitHub et sync&eacute;e aux joueurs au prochain lancement de leur jeu.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Onglet &laquo; Client Mods &raquo;</h2>
+        <p class="docs-p">Affiche uniquement les mods marqu&eacute;s <code>side = "client"</code> dans le pack &mdash; ceux install&eacute;s exclusivement c&ocirc;t&eacute; joueur, absents du serveur.</p>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>Action</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><span class="docs-badge docs-badge-purple">Recherche Modrinth</span></td><td>Tape un nom, s&eacute;lectionne le mod, choisis le side (client / both / server) puis clique <strong>Add</strong>. Le .pw.toml est cr&eacute;&eacute; sur GitHub.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-red">Remove</span></td><td>Supprime le .pw.toml du mod sur GitHub. Prism retirera le mod au prochain lancement.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-gray">Refresh</span></td><td>Recharge la liste depuis GitHub.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="docs-info">Les mods ajout&eacute;s avec side <code>both</code> ou <code>server</code> apparaissent dans l&apos;onglet <strong>All Mods</strong> uniquement.</div>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Onglet &laquo; All Mods &raquo;</h2>
+        <p class="docs-p">Affiche <strong>tous</strong> les mods du pack (client, server, both) avec leurs param&egrave;tres complets. Utilise le filtre en haut pour rechercher par nom.</p>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>Action</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><span class="docs-badge docs-badge-gray">Edit</span></td><td>Ouvre le panneau d&apos;&eacute;dition inline du mod.</td></tr>
+              <tr><td><strong>Side</strong></td><td><code>client</code> = install&eacute; uniquement c&ocirc;t&eacute; joueur &bull; <code>server</code> = uniquement sur le serveur (invisible pour Prism) &bull; <code>both</code> = install&eacute; partout.</td></tr>
+              <tr><td><strong>Optional</strong></td><td>Si activ&eacute;, Prism propose le mod comme optionnel. Le joueur peut le d&eacute;cocher &agrave; l&apos;installation.</td></tr>
+              <tr><td><strong>Default</strong></td><td>Si Optional est activ&eacute;, contr&ocirc;le si le mod est coch&eacute; par d&eacute;faut dans Prism.</td></tr>
+              <tr><td><strong>Toggle Activ&eacute;</strong></td><td>D&eacute;sactive le mod : renomme le .pw.toml en .pw.toml.disabled sur GitHub <em>et</em> renomme le .jar en .jar.disabled dans le dossier mods du serveur. Le serveur doit &ecirc;tre red&eacute;marr&eacute; pour que l&apos;effet prenne effet.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-green">Update</span></td><td>Pour les mods Modrinth : met &agrave; jour vers la derni&egrave;re version compatible 1.20.1/Forge.</td></tr>
+              <tr><td><strong>Upload JAR</strong></td><td>Remplace le mod par un fichier .jar upload&eacute; manuellement (override &mdash; pas de m&eacute;tadonn&eacute;es Modrinth). Utile pour des mods non disponibles sur Modrinth.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-gray">Save</span></td><td>Enregistre les modifications de side / optional / default sur GitHub.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Onglet &laquo; Updates &raquo;</h2>
+        <p class="docs-p">V&eacute;rifie les mises &agrave; jour disponibles sur Modrinth pour tous les mods du pack ayant un <code>mod-id</code> Modrinth.</p>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>Action</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><span class="docs-badge docs-badge-purple">Check for Updates</span></td><td>Interroge l&apos;API Modrinth pour chaque mod. Affiche la liste des mods avec une version plus r&eacute;cente disponible.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-green">Update</span></td><td>Met &agrave; jour un mod individuel vers la derni&egrave;re version compatible.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-green">Update All</span></td><td>Met &agrave; jour tous les mods en attente s&eacute;quentiellement.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="docs-warn">Les mods en override (jar upload&eacute; manuellement) n&apos;ont pas de <code>mod-id</code> Modrinth et ne sont pas v&eacute;rifi&eacute;s.</div>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Onglet &laquo; Server &raquo;</h2>
+        <p class="docs-p">Contr&ocirc;le le serveur Minecraft via l&apos;API Crafty Controller. Affiche l&apos;&eacute;tat en temps r&eacute;el et les logs live.</p>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>&Eacute;l&eacute;ment</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Statut</strong></td><td>Rafra&icirc;chi automatiquement toutes les 5 secondes. Indique Running / Stopped, joueurs connect&eacute;s, MSPT, CPU et RAM.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-green">Start</span></td><td>D&eacute;marre le serveur via Crafty.</td></tr>
+              <tr><td><span class="docs-badge docs-badge-red">Stop</span></td><td>Arr&ecirc;te le serveur (envoie la commande stop).</td></tr>
+              <tr><td><span class="docs-badge docs-badge-gray">Restart</span></td><td>Red&eacute;marre le serveur.</td></tr>
+              <tr><td><strong>Send Command</strong></td><td>Envoie une commande directement dans la console du serveur (ex&nbsp;: <code>say Bonjour</code>, <code>op Tomzmn</code>). Appuie sur Entr&eacute;e ou clique Send.</td></tr>
+              <tr><td><strong>Logs</strong></td><td>Flux de logs en temps r&eacute;el via SSE. Se connecte automatiquement quand l&apos;onglet Server est ouvert. Le bouton Clear vide l&apos;affichage.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Bouton &laquo; Sync to GitHub &raquo;</h2>
+        <p class="docs-p">D&eacute;clenche imm&eacute;diatement la stack Docker <strong>modpack-sync</strong> via l&apos;API Portainer. Cette stack compare les mods du serveur avec le repo GitHub et committe les diff&eacute;rences. Utile apr&egrave;s avoir ajout&eacute; ou supprim&eacute; un mod manuellement dans le dossier du serveur.</p>
+        <div class="docs-info">La sync est aussi d&eacute;clench&eacute;e automatiquement &agrave; chaque d&eacute;marrage du serveur via la commande Java dans Crafty.</div>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Comment les joueurs re&ccedil;oivent les mods</h2>
+        <p class="docs-p">Les joueurs utilisent <strong>Prism Launcher</strong> avec le profil pr&eacute;configur&eacute;. Un hook pre-launch appelle automatiquement <code>packwiz-installer</code> qui&nbsp;:</p>
+        <ol class="docs-ol">
+          <li>T&eacute;l&eacute;charge le <code>pack.toml</code> depuis GitHub</li>
+          <li>Compare avec les mods install&eacute;s localement</li>
+          <li>T&eacute;l&eacute;charge les nouveaux mods / supprime les anciens</li>
+          <li>Lance le jeu</li>
+        </ol>
+        <div class="docs-info">Le joueur n&apos;a rien &agrave; faire &mdash; la sync est transparente &agrave; chaque lancement.</div>
+
+        <h3 class="docs-subtitle">Flux complet d&apos;un changement de mod</h3>
+        <div class="docs-flow">
+          <div class="docs-flow-step"><span class="docs-flow-num">1</span><span>Tu ajoutes/retires un mod sur le serveur</span></div>
+          <div class="docs-flow-arrow">&#8595;</div>
+          <div class="docs-flow-step"><span class="docs-flow-num">2</span><span>Le serveur red&eacute;marre (ou tu cliques <em>Sync to GitHub</em>)</span></div>
+          <div class="docs-flow-arrow">&#8595;</div>
+          <div class="docs-flow-step"><span class="docs-flow-num">3</span><span>modpack-sync d&eacute;tecte le changement et push sur GitHub</span></div>
+          <div class="docs-flow-arrow">&#8595;</div>
+          <div class="docs-flow-step"><span class="docs-flow-num">4</span><span>Le joueur lance Prism &rarr; sync automatique &rarr; jeu &agrave; jour</span></div>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Ajouter un mod client uniquement</h2>
+        <ol class="docs-ol">
+          <li>Va dans l&apos;onglet <strong>Client Mods</strong></li>
+          <li>Recherche le mod dans le champ Modrinth</li>
+          <li>S&eacute;lectionne le side <code>client</code></li>
+          <li>Clique <strong>Add</strong></li>
+        </ol>
+        <div class="docs-info">Le mod sera install&eacute; uniquement c&ocirc;t&eacute; joueur. Il ne sera jamais supprim&eacute; par la sync serveur.</div>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">D&eacute;sactiver un mod temporairement</h2>
+        <ol class="docs-ol">
+          <li>Va dans l&apos;onglet <strong>All Mods</strong></li>
+          <li>Clique <strong>Edit</strong> sur le mod concern&eacute;</li>
+          <li>Bascule le toggle <strong>Activ&eacute;</strong></li>
+        </ol>
+        <p class="docs-p">Le .pw.toml est renomm&eacute; en .pw.toml.disabled sur GitHub et le .jar en .jar.disabled sur le serveur. Red&eacute;marre le serveur pour appliquer. Les joueurs n&apos;auront plus le mod au prochain lancement de Prism.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2 class="docs-title">Mods sans Modrinth (jars manuels)</h2>
+        <p class="docs-p">Certains mods ne sont pas sur Modrinth (mods priv&eacute;s, patches custom&hellip;). Pour les g&eacute;rer&nbsp;:</p>
+        <ol class="docs-ol">
+          <li>Copie le .jar dans le dossier mods du serveur</li>
+          <li>Clique <strong>Sync to GitHub</strong> &mdash; le mod est d&eacute;tect&eacute; comme override et ajout&eacute; au repo</li>
+        </ol>
+        <p class="docs-p">Ou depuis All Mods &rarr; Edit &rarr; <strong>Upload JAR</strong> pour le mettre directement sur GitHub sans passer par le serveur.</p>
+        <div class="docs-warn">Les mods en override ne sont pas v&eacute;rifi&eacute;s pour les mises &agrave; jour automatiques.</div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 <div class="toast-container" id="toasts"></div>
 <script>
@@ -659,6 +851,7 @@ var serverRunning = false;
   document.getElementById('tabbtn-all').addEventListener('click', function() { switchTab('all'); });
   document.getElementById('tabbtn-updates').addEventListener('click', function() { switchTab('updates'); });
   document.getElementById('tabbtn-server').addEventListener('click', function() { switchTab('server'); });
+  document.getElementById('tabbtn-docs').addEventListener('click', function() { switchTab('docs'); });
   document.getElementById('refreshClientBtn').addEventListener('click', function() { loadMods(); });
   document.getElementById('refreshAllBtn').addEventListener('click', function() { loadAllMods(); });
   document.getElementById('searchBtn').addEventListener('click', function() { doSearch(); });
@@ -682,8 +875,8 @@ var serverRunning = false;
 
 function switchTab(tab) {
   activeTab = tab;
-  var tabs = ['client', 'all', 'updates', 'server'];
-  var btnIds = ['tabbtn-client', 'tabbtn-all', 'tabbtn-updates', 'tabbtn-server'];
+  var tabs = ['client', 'all', 'updates', 'server', 'docs'];
+  var btnIds = ['tabbtn-client', 'tabbtn-all', 'tabbtn-updates', 'tabbtn-server', 'tabbtn-docs'];
   tabs.forEach(function(t, i) {
     document.getElementById(btnIds[i]).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
