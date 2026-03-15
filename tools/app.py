@@ -567,12 +567,15 @@ function renderSearch(results) {
         '<div class="mod-actions">' +
           (already
             ? '<span class="already-badge">Added</span>'
-            : '<button class="sm" onclick="addMod(\'' + escHtml(r.project_id) + '\', \'' + escHtml(r.slug) + '\', \'' + escHtml(r.name.replace(/'/g,'')) + '\')" id="add-' + escHtml(r.slug) + '">Add</button>'
+            : '<button class="sm add-btn" data-pid="' + escHtml(r.project_id) + '" data-slug="' + escHtml(r.slug) + '" data-name="' + escHtml(r.name) + '" id="add-' + escHtml(r.slug) + '">Add</button>'
           ) +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
+  el.querySelectorAll('.add-btn').forEach(function(b) {
+    b.addEventListener('click', function() { addMod(b.dataset.pid, b.dataset.slug, b.dataset.name); });
+  });
 }
 
 function refreshSearchBadges() {
@@ -661,21 +664,21 @@ function renderAllMods(mods) {
           '</div>' +
         '</div>' +
         '<div class="mod-actions">' +
-          '<button class="ghost sm" onclick="toggleEditPanel(\'' + escHtml(slug) + '\')">Edit</button>' +
+          '<button class="ghost sm edit-btn" data-slug="' + escHtml(slug) + '">Edit</button>' +
         '</div>' +
       '</div>' +
       '<div class="edit-panel" id="edit-' + escHtml(slug) + '">' +
         '<div class="edit-panel-row">' +
           '<span class="edit-label">Side</span>' +
           '<div class="seg-group" id="seg-' + escHtml(slug) + '">' +
-            '<button class="seg-btn' + (sid==='client'?' active':'') + '" onclick="setSide(\'' + escHtml(slug) + '\',\'client\')">client</button>' +
-            '<button class="seg-btn' + (sid==='server'?' active':'') + '" onclick="setSide(\'' + escHtml(slug) + '\',\'server\')">server</button>' +
-            '<button class="seg-btn' + (sid==='both'?' active':'') + '" onclick="setSide(\'' + escHtml(slug) + '\',\'both\')">both</button>' +
+            '<button class="seg-btn' + (sid==='client'?' active':'') + ' side-btn" data-slug="' + escHtml(slug) + '" data-side="client">client</button>' +
+            '<button class="seg-btn' + (sid==='server'?' active':'') + ' side-btn" data-slug="' + escHtml(slug) + '" data-side="server">server</button>' +
+            '<button class="seg-btn' + (sid==='both'?' active':'') + ' side-btn" data-slug="' + escHtml(slug) + '" data-side="both">both</button>' +
           '</div>' +
         '</div>' +
         '<div class="edit-panel-row">' +
           '<span class="edit-label">Optional</span>' +
-          '<label class="toggle"><input type="checkbox" id="opt-' + escHtml(slug) + '" ' + (isOpt?'checked':'') + ' onchange="onOptionalChange(\'' + escHtml(slug) + '\')"/><span class="toggle-slider"></span></label>' +
+          '<label class="toggle"><input type="checkbox" class="opt-chk" data-slug="' + escHtml(slug) + '" id="opt-' + escHtml(slug) + '" ' + (isOpt?'checked':'') + '/><span class="toggle-slider"></span></label>' +
           '<span class="toggle-label" id="opt-label-' + escHtml(slug) + '">' + (isOpt?'Yes':'No') + '</span>' +
         '</div>' +
         '<div class="edit-panel-row" id="default-row-' + escHtml(slug) + '" style="' + (!isOpt?'display:none':'') + '">' +
@@ -684,14 +687,29 @@ function renderAllMods(mods) {
           '<span class="toggle-label" id="def-label-' + escHtml(slug) + '">' + (isDef?'Yes':'No') + '</span>' +
         '</div>' +
         '<div class="edit-actions">' +
-          '<button class="sm success-btn" onclick="saveMod(\'' + escHtml(slug) + '\', \'' + escHtml(m.name.replace(/'/g,'')) + '\')" id="save-' + escHtml(slug) + '">Save</button>' +
-          '<button class="sm ghost" onclick="toggleEditPanel(\'' + escHtml(slug) + '\')">Cancel</button>' +
+          '<button class="sm success-btn save-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" id="save-' + escHtml(slug) + '">Save</button>' +
+          '<button class="sm ghost cancel-btn" data-slug="' + escHtml(slug) + '">Cancel</button>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
-  // wire up default label toggles
+  // wire up event listeners (avoid inline onclick with quotes)
+  el.querySelectorAll('.edit-btn').forEach(function(b) {
+    b.addEventListener('click', function() { toggleEditPanel(b.dataset.slug); });
+  });
+  el.querySelectorAll('.side-btn').forEach(function(b) {
+    b.addEventListener('click', function() { setSide(b.dataset.slug, b.dataset.side); });
+  });
+  el.querySelectorAll('.opt-chk').forEach(function(chk) {
+    chk.addEventListener('change', function() { onOptionalChange(chk.dataset.slug); });
+  });
+  el.querySelectorAll('.save-btn').forEach(function(b) {
+    b.addEventListener('click', function() { saveMod(b.dataset.slug, b.dataset.name); });
+  });
+  el.querySelectorAll('.cancel-btn').forEach(function(b) {
+    b.addEventListener('click', function() { toggleEditPanel(b.dataset.slug); });
+  });
   mods.forEach(function(m) {
     var defInput = document.getElementById('def-' + m.slug);
     if (defInput) {
