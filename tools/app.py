@@ -1796,9 +1796,11 @@ async def fetch_and_parse_entry(client: httpx.AsyncClient, entry: dict, client_o
         mod_id = data.get("update", {}).get("modrinth", {}).get("mod-id", "")
         version_id = data.get("update", {}).get("modrinth", {}).get("version", "")
         option = data.get("option", {})
+        jar_filename = data.get("filename", "")
         return {
             "slug": slug,
             "name": data.get("name", slug),
+            "filename": jar_filename,
             "version": version_id,
             "mod_id": mod_id,
             "sha": entry.get("sha", ""),
@@ -1922,16 +1924,19 @@ async def list_all_mods():
             # Also index by slug for overrides
             pack_by_filename[m["slug"]] = m
 
-        # Enrich pack mods with server info and icon
+        # Enrich pack mods with server info
         enriched = []
         seen_filenames = set()
 
         for pm in pack_mods:
             fname = pm.get("filename", "")
             sinfo = server_map.get(fname, {})
+            pm["in_pack"] = True
             pm["in_server"] = bool(sinfo) or pm.get("side") == "client"
             pm["server_disabled"] = sinfo.get("disabled", pm.get("disabled", False))
-            pm["version"] = pm.get("version") or sinfo.get("version", "")
+            # Use server version if no modrinth version_id, else keep version_id
+            if not pm.get("version") and sinfo.get("version"):
+                pm["version"] = sinfo["version"]
             if fname:
                 seen_filenames.add(fname)
             enriched.append(pm)
