@@ -315,6 +315,21 @@ HTML = """<!DOCTYPE html>
     font-size: 0.72rem;
     font-weight: 700;
   }
+  .notinpack-badge {
+    background: rgba(255,152,0,0.12);
+    border: 1px solid rgba(255,152,0,0.5);
+    color: #ffb74d;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .mod-version {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 0.3rem;
+  }
   .update-badge {
     background: rgba(224,146,46,0.18);
     border: 1px solid #e0922e;
@@ -1117,17 +1132,20 @@ function renderAllMods(mods) {
     var sid = m.side || 'both';
     var isOpt = !!m.optional;
     var isDef = !!m.default;
-    var isDisabled = !!m.disabled;
+    var isDisabled = !!m.disabled || !!m.server_disabled;
+    var inPack = m.in_pack !== false;
     var slug = m.slug;
     var hasMod = !!m.mod_id;
+    var ver = m.version ? escHtml(m.version) : '';
     return '<div class="mod-item' + (isDisabled ? ' disabled-mod' : '') + '" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
       '<div class="mod-item-row">' +
         (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
-          '<div class="mod-name">' + escHtml(m.name) + '</div>' +
+          '<div class="mod-name">' + escHtml(m.name) + (ver ? ' <span class="mod-version">' + ver + '</span>' : '') + '</div>' +
           '<div class="mod-meta">' +
             '<span class="side-badge ' + sideBadgeClass(sid) + '">' + escHtml(sid) + '</span>' +
             (isDisabled ? '<span class="disabled-badge">disabled</span>' : '') +
+            (!inPack ? '<span class="notinpack-badge">not in pack</span>' : '') +
             (isOpt ? '<span class="optional-badge">optional</span>' : '') +
             (isOpt && isDef ? '<span class="default-badge">default on</span>' : '') +
             (hasMod ? ' <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener" style="font-size:0.78rem">Modrinth</a>' : '') +
@@ -1564,7 +1582,7 @@ async function sendServerCommand() {
 function appendLog(line) {
   var box = document.getElementById('srvLogBox');
   var atBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 10;
-  box.textContent += line + '\n';
+  box.textContent += line + '\\n';
   if (atBottom) box.scrollTop = box.scrollHeight;
 }
 
@@ -1848,23 +1866,108 @@ async def list_mods():
     return mods
 
 
+def extract_version_from_filename(filename: str) -> str:
+    """Extract version string from a jar filename like mod-name-1.2.3.jar"""
+    name = re.sub(r'\.(jar|disabled)$', '', filename, flags=re.IGNORECASE)
+    name = re.sub(r'\.(jar\.disabled)$', '', name, flags=re.IGNORECASE)
+    # Match version-like patterns: digits with dots, optionally prefixed with - or _
+    m = re.search(r'[-_]([vV]?\d+[\d.\-+_a-zA-Z]*)$', name)
+    if m:
+        return m.group(1)
+    # Try matching anywhere in the name
+    m = re.search(r'[-_]([vV]?\d+[.\d]+)', name)
+    if m:
+        return m.group(1)
+    return ""
+
+
+def get_server_mods() -> list:
+    """List all jar files in /server-mods with version and disabled state."""
+    server_mods_dir = "/server-mods"
+    if not os.path.isdir(server_mods_dir):
+        return []
+    result = []
+    for fname in sorted(os.listdir(server_mods_dir)):
+        if fname.endswith(".jar"):
+            result.append({"filename": fname, "disabled": False, "version": extract_version_from_filename(fname)})
+        elif fname.endswith(".jar.disabled"):
+            result.append({"filename": fname, "disabled": True, "version": extract_version_from_filename(fname)})
+    return result
+
+
 @app.get("/api/all-mods")
 async def list_all_mods():
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
 
+    # Get server jars (source of truth for what's actually installed)
+    server_jars = get_server_mods()
+    # Map filename → server info
+    server_map: dict = {}
+    for s in server_jars:
+        base = s["filename"].replace(".disabled", "")
+        server_map[base] = s
+
     async with httpx.AsyncClient(timeout=60) as client:
         pw_files = await list_all_pw_files(client)
-
         tasks = [fetch_and_parse_entry(client, e, client_only=False) for e in pw_files]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        mods = [r for r in results if isinstance(r, dict)]
+        pack_mods = [r for r in results if isinstance(r, dict)]
 
-        mods = list(await asyncio.gather(*[enrich_icon(client, m) for m in mods], return_exceptions=False))
-        mods = [m for m in mods if isinstance(m, dict)]
-        mods = sorted(mods, key=lambda m: m["name"].lower())
+        # Build map: filename → pack mod
+        pack_by_filename: dict = {}
+        for m in pack_mods:
+            if m.get("filename"):
+                pack_by_filename[m["filename"]] = m
+            # Also index by slug for overrides
+            pack_by_filename[m["slug"]] = m
 
-    return mods
+        # Enrich pack mods with server info and icon
+        enriched = []
+        seen_filenames = set()
+
+        for pm in pack_mods:
+            fname = pm.get("filename", "")
+            sinfo = server_map.get(fname, {})
+            pm["in_server"] = bool(sinfo) or pm.get("side") == "client"
+            pm["server_disabled"] = sinfo.get("disabled", pm.get("disabled", False))
+            pm["version"] = pm.get("version") or sinfo.get("version", "")
+            if fname:
+                seen_filenames.add(fname)
+            enriched.append(pm)
+
+        # Add server jars NOT in pack
+        for sinfo in server_jars:
+            base = sinfo["filename"].replace(".disabled", "")
+            if base not in seen_filenames:
+                enriched.append({
+                    "slug": re.sub(r'[^a-z0-9-]', '-', base.replace(".jar", "").lower())[:40],
+                    "name": base.replace(".jar", ""),
+                    "filename": base,
+                    "version": sinfo["version"],
+                    "mod_id": "",
+                    "sha": "",
+                    "side": "both",
+                    "optional": False,
+                    "default": False,
+                    "disabled": sinfo["disabled"],
+                    "server_disabled": sinfo["disabled"],
+                    "in_pack": False,
+                    "in_server": True,
+                    "icon": None,
+                })
+
+        # Mark all pack mods as in_pack
+        for m in enriched:
+            if "in_pack" not in m:
+                m["in_pack"] = True
+
+        # Enrich icons in parallel (only for Modrinth mods)
+        enriched = list(await asyncio.gather(*[enrich_icon(client, m) for m in enriched], return_exceptions=False))
+        enriched = [m for m in enriched if isinstance(m, dict)]
+        enriched = sorted(enriched, key=lambda m: m["name"].lower())
+
+    return enriched
 
 
 @app.get("/api/search")
