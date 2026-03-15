@@ -497,7 +497,7 @@ function renderMods(mods) {
   var el = document.getElementById('modList');
   if (!mods.length) { el.innerHTML = '<div class="empty">No client mods installed yet.</div>'; return; }
   el.innerHTML = mods.map(function(m) {
-    return '<div class="mod-item" id="mod-' + escHtml(m.slug) + '">' +
+    return '<div class="mod-item" id="mod-' + escHtml(m.slug) + '" data-name="' + escHtml(m.name) + '">' +
       '<div class="mod-item-row">' +
         (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
@@ -508,16 +508,16 @@ function renderMods(mods) {
           '</div>' +
         '</div>' +
         '<div class="mod-actions">' +
-          '<button class="sm danger" onclick="removeMod(\'' + escHtml(m.slug) + '\', \'' + escHtml(m.name.replace(/'/g,'')) + '\')" id="rm-' + escHtml(m.slug) + '">Remove</button>' +
+          '<button class="sm danger" onclick="removeMod(this)" id="rm-' + escHtml(m.slug) + '">Remove</button>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 }
 
-async function removeMod(slug, name) {
-  var btn = document.getElementById('rm-' + slug);
-  if (!btn) return;
+async function removeMod(btn) {
+  var slug = btn.id.replace('rm-', '');
+  var name = btn.closest('.mod-item').dataset.name || slug;
   btn.disabled = true;
   btn.textContent = '...';
   try {
