@@ -577,11 +577,6 @@ hash = "14117b94c456598c9acece143c7a0da3cf56d13182d035a74a2da8a52dd19cbd"
 metafile = true
 
 [[files]]
-file = "mods/the-knocker.pw.toml"
-hash = "7f97f44cb7576e5c043ce587315f86b649f4902b32532ba7488f6e6359e71143"
-metafile = true
-
-[[files]]
 file = "mods/thermal-cultivation.pw.toml"
 hash = "6e3b20b2d1af0d1681580879ab0af9d74854d095b273fb3f01d3746118134094"
 metafile = true
