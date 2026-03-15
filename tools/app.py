@@ -566,6 +566,19 @@ HTML = """<!DOCTYPE html>
   .docs-flow-step { display: flex; align-items: center; gap: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.88rem; color: var(--text-muted); }
   .docs-flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
   .docs-flow-arrow { text-align: center; color: var(--border); font-size: 1.1rem; line-height: 1.2; }
+
+  /* Mods tab layout */
+  .mods-layout { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; align-items: start; }
+  @media (max-width: 1100px) { .mods-layout { grid-template-columns: 1fr; } }
+  .mods-main { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .mods-side { position: sticky; top: 1rem; }
+  .mods-toolbar { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+  .mods-toolbar input { max-width: 200px; flex: none; }
+  .mods-main .mod-list { padding: 1rem 1.25rem; }
+  .filter-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+  .chip { background: transparent; border: 1px solid var(--border); border-radius: 999px; color: var(--text-muted); padding: 0.25rem 0.75rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -579,56 +592,47 @@ HTML = """<!DOCTYPE html>
 </header>
 <div class="container">
   <div class="tabs">
-    <button class="tab-btn active" id="tabbtn-client">Client Mods</button>
-    <button class="tab-btn" id="tabbtn-all">All Mods</button>
+    <button class="tab-btn active" id="tabbtn-mods">Mods</button>
     <button class="tab-btn" id="tabbtn-updates">Updates</button>
     <button class="tab-btn" id="tabbtn-server">Server</button>
     <button class="tab-btn" id="tabbtn-docs">Docs</button>
   </div>
 
-  <!-- CLIENT MODS TAB -->
-  <div class="tab-panel active" id="tab-client">
-    <div class="grid">
-      <div class="panel">
-        <div class="panel-header">
-          <h2>Installed Client Mods</h2>
-          <span class="badge" id="modCount">0</span>
-          <button class="ghost sm refresh-btn" id="refreshClientBtn">Refresh</button>
-        </div>
-        <div class="panel-body">
-          <div id="modList" class="mod-list">
-            <div class="loading"><div class="spinner"></div> Loading mods...</div>
+  <!-- MODS TAB -->
+  <div class="tab-panel active" id="tab-mods">
+    <div class="mods-layout">
+      <div class="mods-main">
+        <div class="mods-toolbar">
+          <input type="text" id="allModsFilter" placeholder="Filter by name..."/>
+          <div class="filter-chips" id="filterChips">
+            <button class="chip active" data-filter="all">All</button>
+            <button class="chip" data-filter="client">Client</button>
+            <button class="chip" data-filter="server">Server</button>
+            <button class="chip" data-filter="both">Both</button>
+            <button class="chip" data-filter="notinpack">Not in pack</button>
+            <button class="chip" data-filter="disabled">Disabled</button>
           </div>
+          <span class="filter-count" id="allModsCount"></span>
+          <button class="ghost sm" id="refreshAllBtn">Refresh</button>
         </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <h2>Search Modrinth</h2>
-        </div>
-        <div class="panel-body">
-          <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search for mods (1.20.1 / Forge)..."/>
-            <button id="searchBtn">Search</button>
-          </div>
-          <div id="searchResults" class="mod-list">
-            <div class="empty">Search for mods to add to your pack.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ALL MODS TAB -->
-  <div class="tab-panel" id="tab-all">
-    <div class="all-mods-panel">
-      <div class="filter-bar">
-        <input type="text" id="allModsFilter" placeholder="Filter mods by name..."/>
-        <button class="ghost sm" id="refreshAllBtn">Refresh</button>
-        <span class="filter-count" id="allModsCount"></span>
-      </div>
-      <div class="panel-body">
         <div id="allModsList" class="mod-list">
-          <div class="loading"><div class="spinner"></div> Loading all mods...</div>
+          <div class="loading"><div class="spinner"></div> Loading...</div>
+        </div>
+      </div>
+      <div class="mods-side">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Add Mod</h2>
+          </div>
+          <div class="panel-body">
+            <div class="search-bar">
+              <input type="text" id="searchInput" placeholder="Search Modrinth..."/>
+              <button id="searchBtn">Search</button>
+            </div>
+            <div id="searchResults" class="mod-list">
+              <div class="empty">Search for mods to add.</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -855,25 +859,30 @@ var installedSlugs = new Set();
 var installedMods = [];
 var allMods = [];
 var updatesData = [];
-var activeTab = 'client';
+var activeTab = 'mods';
 var allModsLoaded = false;
 var serverStatusInterval = null;
 var logEventSource = null;
 var serverRunning = false;
 
 (function() {
-  document.getElementById('tabbtn-client').addEventListener('click', function() { switchTab('client'); });
-  document.getElementById('tabbtn-all').addEventListener('click', function() { switchTab('all'); });
+  document.getElementById('tabbtn-mods').addEventListener('click', function() { switchTab('mods'); });
   document.getElementById('tabbtn-updates').addEventListener('click', function() { switchTab('updates'); });
   document.getElementById('tabbtn-server').addEventListener('click', function() { switchTab('server'); });
   document.getElementById('tabbtn-docs').addEventListener('click', function() { switchTab('docs'); });
-  document.getElementById('refreshClientBtn').addEventListener('click', function() { loadMods(); });
-  document.getElementById('refreshAllBtn').addEventListener('click', function() { loadAllMods(); });
+  document.getElementById('refreshAllBtn').addEventListener('click', function() { allModsLoaded = false; loadAllMods(); });
   document.getElementById('searchBtn').addEventListener('click', function() { doSearch(); });
   document.getElementById('searchInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doSearch();
   });
   document.getElementById('allModsFilter').addEventListener('input', function() { filterAllMods(); });
+  document.querySelectorAll('#filterChips .chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('#filterChips .chip').forEach(function(c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      filterAllMods();
+    });
+  });
   document.getElementById('checkUpdatesBtn').addEventListener('click', function() { checkUpdates(); });
   document.getElementById('updateAllBtn').addEventListener('click', function() { updateAll(); });
   document.getElementById('srvStartBtn').addEventListener('click', function() { serverAction('start_server'); });
@@ -886,17 +895,18 @@ var serverRunning = false;
   document.getElementById('srvClearLogBtn').addEventListener('click', function() {
     document.getElementById('srvLogBox').textContent = '';
   });
+  loadAllMods();
 })();
 
 function switchTab(tab) {
   activeTab = tab;
-  var tabs = ['client', 'all', 'updates', 'server', 'docs'];
-  var btnIds = ['tabbtn-client', 'tabbtn-all', 'tabbtn-updates', 'tabbtn-server', 'tabbtn-docs'];
+  var tabs = ['mods', 'updates', 'server', 'docs'];
+  var btnIds = ['tabbtn-mods', 'tabbtn-updates', 'tabbtn-server', 'tabbtn-docs'];
   tabs.forEach(function(t, i) {
     document.getElementById(btnIds[i]).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
-  if (tab === 'all' && !allModsLoaded) {
+  if (tab === 'mods' && !allModsLoaded) {
     loadAllMods();
   }
   if (tab === 'server') {
@@ -1082,7 +1092,8 @@ async function addMod(projectId, slug, name, side) {
     var data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Add failed');
     toast('Added: ' + name);
-    await loadMods();
+    allModsLoaded = false;
+    await loadAllMods();
     var actions = btn ? btn.closest('.mod-actions') : null;
     if (actions) actions.innerHTML = '<span class="already-badge">Added</span>';
   } catch(e) {
@@ -1102,6 +1113,10 @@ async function loadAllMods() {
     if (!res.ok) throw new Error(data.detail || 'Failed to load mods');
     allMods = data;
     allModsLoaded = true;
+    installedMods = data.filter(function(m) { return m.in_pack !== false; });
+    installedSlugs = new Set(installedMods.map(function(m) { return m.slug; }));
+    var inPackCount = installedMods.length;
+    document.getElementById('repoTag').textContent = inPackCount + ' mods in pack / ' + data.length + ' total';
     renderAllMods(allMods);
   } catch(e) {
     document.getElementById('allModsList').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
@@ -1111,9 +1126,17 @@ async function loadAllMods() {
 
 function filterAllMods() {
   var q = document.getElementById('allModsFilter').value.trim().toLowerCase();
-  if (!q) { renderAllMods(allMods); return; }
+  var activeChip = document.querySelector('#filterChips .chip.active');
+  var chipFilter = activeChip ? activeChip.dataset.filter : 'all';
   var filtered = allMods.filter(function(m) {
-    return m.name.toLowerCase().includes(q) || m.slug.toLowerCase().includes(q);
+    if (q && !m.name.toLowerCase().includes(q) && !(m.slug||'').toLowerCase().includes(q)) return false;
+    if (chipFilter === 'all') return true;
+    if (chipFilter === 'client') return m.side === 'client' && m.in_pack !== false;
+    if (chipFilter === 'server') return m.side === 'server' && m.in_pack !== false;
+    if (chipFilter === 'both') return m.side === 'both' && m.in_pack !== false;
+    if (chipFilter === 'notinpack') return m.in_pack === false;
+    if (chipFilter === 'disabled') return !!(m.disabled || m.server_disabled);
+    return true;
   });
   renderAllMods(filtered);
 }
