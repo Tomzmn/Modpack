@@ -499,7 +499,7 @@ function renderMods(mods) {
   el.innerHTML = mods.map(function(m) {
     return '<div class="mod-item" id="mod-' + escHtml(m.slug) + '">' +
       '<div class="mod-item-row">' +
-        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
           '<div class="mod-name">' + escHtml(m.name) + '</div>' +
           '<div class="mod-meta">' +
@@ -558,7 +558,7 @@ function renderSearch(results) {
     var already = installedSlugs.has(r.slug);
     return '<div class="mod-item" id="sr-' + escHtml(r.slug) + '">' +
       '<div class="mod-item-row">' +
-        (r.icon ? '<img class="mod-icon" src="' + escHtml(r.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        (r.icon ? '<img class="mod-icon" src="' + escHtml(r.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
           '<div class="mod-name">' + escHtml(r.name) + '</div>' +
           '<div class="mod-desc">' + escHtml(r.description || '') + '</div>' +
@@ -650,7 +650,7 @@ function renderAllMods(mods) {
     var slug = m.slug;
     return '<div class="mod-item" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
       '<div class="mod-item-row">' +
-        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.style.display=\'none\'" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
           '<div class="mod-name">' + escHtml(m.name) + '</div>' +
           '<div class="mod-meta">' +
