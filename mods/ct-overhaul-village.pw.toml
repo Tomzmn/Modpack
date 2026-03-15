@@ -1,6 +1,6 @@
 name = "ChoiceTheorem's Overhauled Village"
 filename = "[forge]ctov-3.4.14.jar"
-side = "server"
+side = "both"
 
 [download]
 url = "https://cdn.modrinth.com/data/fgmhI8kH/versions/o7mg6MeV/%5Bforge%5Dctov-3.4.14.jar"
