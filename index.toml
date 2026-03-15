@@ -5,14 +5,6 @@ file = "mods/AE2NetworkAnalyzer-1.20-1.0.6-forge.jar"
 hash = "9c10ab288402b6a01815d58029298fc56dd482f045511ad35104b17e9b6c4393"
 
 [[files]]
-file = "mods/BiomesOPlenty-forge-1.20.1-19.0.0.96.jar"
-hash = "330f482487ac3135557b6e898d7e1ae5330321e9cfd5ba63e13a16cf2e8d8b98"
-
-[[files]]
-file = "mods/EnchantingInfuser-v8.0.3-1.20.1-Forge.jar"
-hash = "2563fb5ed1c4737c2adbc379ab4782dee89cc80a25ca938d3294a6fe0b13f6a4"
-
-[[files]]
 file = "mods/FastLeafDecay-32.jar"
 hash = "ce48db06bfb5830c147969793771a8f8b5a5774b182543b906bc439efd4e9469"
 
@@ -21,24 +13,12 @@ file = "mods/FastSuite-1.20.1-5.1.2.jar"
 hash = "5e05cb3ce05785a0061a41b7a83443074a6c26dd7d9db75c453fa2487481d54e"
 
 [[files]]
-file = "mods/GlitchCore-forge-1.20.1-0.0.1.1.jar"
-hash = "e42a8b513da08a910c133caeafad9fc2fcc22fdaaa2eb3e2516e9112a5a0db61"
-
-[[files]]
 file = "mods/MekanismWeapons-1.20.1-3.0.jar"
 hash = "40e5ebac0724450afeebe89f312dd99a12d980c4b18990e8c8d989663f12be77"
 
 [[files]]
 file = "mods/Placebo-1.20.1-8.6.3.jar"
 hash = "1cdf906cfbcbb5e5be2ef1bb721f79a24b01bd2ac559c8cdbfb7693f62421571"
-
-[[files]]
-file = "mods/Structory_1.20.x_v1.3.5.jar"
-hash = "43f4b4b88bb9caa1114928a93e787335e56171b5233a545bf2f4da1ce9fe943b"
-
-[[files]]
-file = "mods/TerraBlender-forge-1.20.1-3.0.1.10.jar"
-hash = "c109016f46ca9bdae69976bf080bbf2e8e5968cb66c0a78845f8ca6af5dbbeb1"
 
 [[files]]
 file = "mods/additional-structures.pw.toml"
@@ -65,8 +45,9 @@ file = "mods/ae2ct-1.20.1-1.1.1.jar"
 hash = "0996cd736e5a951593f94125c059710800056de8def77995deb7ba6b50099367"
 
 [[files]]
-file = "mods/aether-1.20.1-1.5.2-neoforge.jar"
-hash = "5cb64ab1f27e78e8338fe67f9c766578904aad9bc1f8bcc90f306ea52aea3fc5"
+file = "mods/aether.pw.toml"
+hash = "1aaba088a650cc1499e1871cfa92f97e3d10a9d8c612fbd784b36c12382196de"
+metafile = true
 
 [[files]]
 file = "mods/alexs-caves.pw.toml"
@@ -103,12 +84,14 @@ hash = "4e81241ba2da06f425efc5e09fb6b38470125c1581c39e1310c5843a0b96ec76"
 metafile = true
 
 [[files]]
-file = "mods/balm-forge-1.20.1-7.3.38-all.jar"
-hash = "cbe8008218f0f574bc1f78b532cac5f978c33bf36ae2e14805340eab445fdb08"
+file = "mods/balm.pw.toml"
+hash = "fec49033058ced91f7668d4e305e599f5527501ef37c1f30f96d8927d6202d32"
+metafile = true
 
 [[files]]
-file = "mods/bettervillage-forge-1.20.1-3.3.1-all.jar"
-hash = "9e8b26db627f1eaa6f4daa3a771c5ac844ec29249bc251273df394736451d3f2"
+file = "mods/better-village.pw.toml"
+hash = "f1bee56d1c7ec634e3df67e6244c44769d4fbc001dbd72ee9cb22697e1be926e"
+metafile = true
 
 [[files]]
 file = "mods/biomes-o-plenty.pw.toml"
@@ -135,8 +118,9 @@ hash = "a613f5d2df911fea606968bbdb56eebfd05ac02ada846cf0d2e56e72345d9338"
 metafile = true
 
 [[files]]
-file = "mods/cave_dweller-1.20.1-1.6.4.jar"
-hash = "2c243cad05887b40841401abdbb6256473ef4a05be65fc076d68dba34a90d8c1"
+file = "mods/cave-dweller-evolved.pw.toml"
+hash = "fa52f73b4a98378092e9194dc325e98f9339c2855d1ada185e8c3ba004ea39cb"
+metafile = true
 
 [[files]]
 file = "mods/chimes.pw.toml"
@@ -266,6 +250,11 @@ hash = "84e6ec23b1d9e88d4e1147d3d3c7c50b387f4b7ce06c52d3d8b6ceb6412907ee"
 metafile = true
 
 [[files]]
+file = "mods/enchanting-infuser.pw.toml"
+hash = "5789ad8bb50d419d1b8bb736137a65be4d76296575cfcd5b86997cbf5d52cff5"
+metafile = true
+
+[[files]]
 file = "mods/ender-storage.pw.toml"
 hash = "3f4594bfb481b9a2c6ed86e7449039477658be2301ae06b463c02fc4930947d2"
 metafile = true
@@ -290,10 +279,6 @@ file = "mods/framework-forge-1.20.1-0.8.0.jar"
 hash = "37c267f46d8b8dfa81bae8c9fa9fa6467e456cadecae10722ee91b43437f25a0"
 
 [[files]]
-file = "mods/geckolib-forge-1.20.1-4.8.3.jar"
-hash = "8b90e11871a58b63816e99c529e6c932bc88e6beb3fec97ad618e22217df3250"
-
-[[files]]
 file = "mods/geckolib.pw.toml"
 hash = "30fe947e95d8da536ea4ad3c959f07cc504dd739ea530f7f4187ac08f4afcbc0"
 metafile = true
@@ -301,6 +286,11 @@ metafile = true
 [[files]]
 file = "mods/giant-natural-additions.pw.toml"
 hash = "08c4ef58eae5cebba6b3654de1c7140a543ec45f138acf192ce14ec5baea877e"
+metafile = true
+
+[[files]]
+file = "mods/glitchcore.pw.toml"
+hash = "71f185e62d546881244d4b5a213ebc3d2d6df14b0218c0e5dd6426fcb22cb55f"
 metafile = true
 
 [[files]]
@@ -329,8 +319,9 @@ hash = "42a94664fb026e7fb517bf0f3134cf04a2bb6f9695e7e9613f9edf71cb86999a"
 metafile = true
 
 [[files]]
-file = "mods/invtweaks-1.20.1-1.2.2.jar"
-hash = "54ba6fd7d5e4b9a9dadf6876153b99a94b4997f8d4ee0e46c9c58ea5c8c95802"
+file = "mods/inventory-tweaks-refoxed.pw.toml"
+hash = "8afdabc2edf17a0eed4de3a8e25df147c82d1775cddb02cf7f47c0c0f59797e0"
+metafile = true
 
 [[files]]
 file = "mods/iron-furnaces.pw.toml"
@@ -343,8 +334,9 @@ hash = "ca38eb647de7b94c148990dab8827d4269702962509130a860c606366b060e31"
 metafile = true
 
 [[files]]
-file = "mods/irons_spellbooks-1.20.1-3.15.4.jar"
-hash = "dbeabd73fa35b5e5622a7190dcadbb5b91d8fb45dd7f5013658fd4fccf2ec140"
+file = "mods/irons-spells-n-spellbooks.pw.toml"
+hash = "0f69ae82b48bdd8f1a7e320ca5c2156c54d4c140357dac31c77519345bdaca2c"
+metafile = true
 
 [[files]]
 file = "mods/jade-addons-forge.pw.toml"
@@ -362,8 +354,9 @@ hash = "69918d4cb0fac54c9ed94f7a2223b04f9291f79c7f481f0b0e3649a77648fe1b"
 metafile = true
 
 [[files]]
-file = "mods/journeymap-1.20.1-5.10.3-forge.jar"
-hash = "8b2679b7b4881e0aa430fd24345ea446de919faf8a45bd2a71d37c7e8ff6ae1e"
+file = "mods/journeymap.pw.toml"
+hash = "b29b617692233d60179a6d7376dade85063af0e73a3cc53c623bf570fb768d82"
+metafile = true
 
 [[files]]
 file = "mods/kotlin-for-forge.pw.toml"
@@ -381,8 +374,9 @@ hash = "c9328647ad980e19cf9768836421ad382b31d69d18153933360c0be48649ebae"
 metafile = true
 
 [[files]]
-file = "mods/lionfishapi-2.4-Fix.jar"
-hash = "7f54de417aae331bf39f2847d3029d0976b90b50f217f9b4cc856433d34aee6f"
+file = "mods/lionfish-api.pw.toml"
+hash = "3e055c411c197b2103e338dc9fdcd37272df81aaf4246f801694f97feaf7d232"
+metafile = true
 
 [[files]]
 file = "mods/lithostitched.pw.toml"
@@ -469,8 +463,9 @@ hash = "97b807fbcaa59fd13ffdfd1428a2484d7c320f94af9ffda992ee9be9beba0286"
 metafile = true
 
 [[files]]
-file = "mods/mods_optimizer-forge-1.20.1-4.3.0.jar"
-hash = "af1cc50e5e4adeaf37ee65e0d461c5a135abc8df48aa1a93324db3fcbd40ffe6"
+file = "mods/mods-optimizer.pw.toml"
+hash = "0fe3b9e43641e866086c54b0d47200fefa911c3f864c7f71eba573c1ef4e8877"
+metafile = true
 
 [[files]]
 file = "mods/mouse-tweaks.pw.toml"
@@ -498,8 +493,9 @@ hash = "5b97d8644a71fb70757b616a1a7c8ab0245fc9a46f7928bf59f428263eb08c6e"
 metafile = true
 
 [[files]]
-file = "mods/oreexcavation-1.13.174.jar"
-hash = "a4a7386c125553848b3e448e150800f1a4ca748ed56134db85e5c2668e6f8d3f"
+file = "mods/ore-excavation.pw.toml"
+hash = "c6465b957a78be227bf3af4f131c8413c563f418d8c32ef21b13097792d49c0d"
+metafile = true
 
 [[files]]
 file = "mods/patchouli.pw.toml"
@@ -526,10 +522,6 @@ file = "mods/refurbished_furniture-forge-1.20.1-1.0.20.jar"
 hash = "480546202aa21fa07e6b1571f3e3263e5690e9804afb7c35984642bcf473bc6e"
 
 [[files]]
-file = "mods/reskillable-4.3.0.1-1.20.1.jar"
-hash = "51c3f21124a296033de182dcc5c58382c51a4be76e2c4af6baa99a38ebd58940"
-
-[[files]]
 file = "mods/resourceful-config.pw.toml"
 hash = "b85e8417e797be3fdae046c487eeda8f54cdc88f3f20e462e0e229f8dd734214"
 metafile = true
@@ -540,20 +532,33 @@ hash = "5c07edd0c8fe82e85efd6c027476ba54cf98291526803b74614c3436292e4ab6"
 metafile = true
 
 [[files]]
-file = "mods/sophisticatedbackpacks-1.20.1-3.24.25.1566.jar"
-hash = "4e03bcc758bf2c5d45389d26f36480bb77591470f9bc1d27e63ceb4ce1f68abe"
+file = "mods/skillable-reforged.pw.toml"
+hash = "f4594da8353e784bdabf29e9dd17cc5798d045504258b9d7ed4e3c9fd0293ea2"
+metafile = true
 
 [[files]]
-file = "mods/sophisticatedcore-1.20.1-1.3.7.1518.jar"
-hash = "a3e93d6224716a8cf80bb52cd20af60298417f6bd34c017654b45e9178bb74fc"
+file = "mods/sophisticated-backpacks.pw.toml"
+hash = "0ca5ba64f190fa8928e9309b6e49c9fe78454236ded36bacc4e9394a3b254cde"
+metafile = true
 
 [[files]]
-file = "mods/sophisticatedstorage-1.20.1-1.4.28.1526.jar"
-hash = "74815d8b740cfc8be5d85646538fdceccb37cadd33aac59b1e64e5a853334974"
+file = "mods/sophisticated-core.pw.toml"
+hash = "007044654cd508bbf0335fd102dabf21ab3cb332f8c2cd11f022c9d781926511"
+metafile = true
+
+[[files]]
+file = "mods/sophisticated-storage.pw.toml"
+hash = "2b035edc2771212ace4171ec078c8ca82ffba30e6137441a27391ffb48fce9e7"
+metafile = true
 
 [[files]]
 file = "mods/spark.pw.toml"
 hash = "0be4976227df8e261fd362889bf8e85b93e224d1b1c3cd2a11b73a9de3b64083"
+metafile = true
+
+[[files]]
+file = "mods/structory.pw.toml"
+hash = "d0b06ed3c01796837223764708bafdc354ca271083f29700aa2de1c5e1b4ff89"
 metafile = true
 
 [[files]]
@@ -671,8 +676,9 @@ hash = "3e94877a9b48b2156de7f348232beb84729d3e230c7cf267f6e381ef9f8bf8df"
 metafile = true
 
 [[files]]
-file = "mods/waystones-forge-1.20.1-14.1.20.jar"
-hash = "5ecc6535596b5954f6293224be6b35805c64f4d4aedc2b9e32d9508dd529cabd"
+file = "mods/waystones.pw.toml"
+hash = "ff646e2f218fe9b5094b835855949b70f3f528f0d12ce2401455f60ee9017dbb"
+metafile = true
 
 [[files]]
 file = "mods/weaponmaster.pw.toml"
@@ -757,3 +763,7 @@ metafile = true
 file = "mods/yungs-extras.pw.toml"
 hash = "cbc4a42265c7235d95f596f4d03819d868e002c2b175f2f6bd30420416a7cef2"
 metafile = true
+
+[[files]]
+file = "tools/app.py"
+hash = "50537761884a07cbd8e7cdea6493b19671900965983f72341f966b5f8a969bf7"
