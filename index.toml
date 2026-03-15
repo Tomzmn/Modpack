@@ -376,15 +376,6 @@ hash = "c9328647ad980e19cf9768836421ad382b31d69d18153933360c0be48649ebae"
 metafile = true
 
 [[files]]
-file = "mods/lionfish-api.pw.toml"
-hash = "3e055c411c197b2103e338dc9fdcd37272df81aaf4246f801694f97feaf7d232"
-metafile = true
-
-[[files]]
-file = "mods/lionfishapi-2.4-Fix.jar"
-hash = "7f54de417aae331bf39f2847d3029d0976b90b50f217f9b4cc856433d34aee6f"
-
-[[files]]
 file = "mods/lithostitched.pw.toml"
 hash = "45c55bdbbf2240dfa30cedb5cd437f5716ccf09a707dcdffbe7f39af3e19ff7f"
 metafile = true
