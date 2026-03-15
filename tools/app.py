@@ -7,7 +7,7 @@ import hashlib
 from typing import Optional
 import httpx
 from fastapi import FastAPI, HTTPException, File, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 
@@ -15,10 +15,20 @@ GITHUB_PAT = os.environ.get("GITHUB_PAT", "")
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "")
 PORT = int(os.environ.get("PORT", "8080"))
 
+CRAFTY_URL = os.environ.get("CRAFTY_URL", "")
+CRAFTY_TOKEN = os.environ.get("CRAFTY_TOKEN", "")
+CRAFTY_SERVER_ID = os.environ.get("CRAFTY_SERVER_ID", "")
+PORTAINER_URL = os.environ.get("PORTAINER_URL", "https://portainer:9443")
+PORTAINER_TOKEN = os.environ.get("PORTAINER_TOKEN", "")
+PORTAINER_STACK_ID = os.environ.get("PORTAINER_STACK_ID", "")
+PORTAINER_ENDPOINT_ID = os.environ.get("PORTAINER_ENDPOINT_ID", "2")
+
 GITHUB_API = "https://api.github.com"
 MODRINTH_API = "https://api.modrinth.com/v2"
 GAME_VERSION = "1.20.1"
 LOADER = "forge"
+
+SERVER_MODS_DIR = "/server-mods"
 
 app = FastAPI()
 
@@ -179,6 +189,7 @@ HTML = """<!DOCTYPE html>
     transition: border-color 0.2s;
   }
   .mod-item:hover { border-color: var(--accent); }
+  .mod-item.disabled-mod { opacity: 0.55; }
   .mod-item-row {
     padding: 0.75rem 1rem;
     display: flex;
@@ -217,6 +228,15 @@ HTML = """<!DOCTYPE html>
     padding: 0.2rem 0.6rem;
     font-size: 0.75rem;
     font-weight: 600;
+  }
+  .disabled-badge {
+    background: rgba(224, 82, 82, 0.15);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
   }
   .dl-count { color: var(--text-muted); font-size: 0.75rem; }
   .loading {
@@ -420,6 +440,70 @@ HTML = """<!DOCTYPE html>
     gap: 0.5rem;
     flex-wrap: wrap;
   }
+
+  /* Server tab */
+  .server-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  @media (max-width: 900px) { .server-grid { grid-template-columns: 1fr; } }
+  .status-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .status-card h3 { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+  .status-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
+  .status-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--border);
+  }
+  .status-dot.running { background: var(--success); box-shadow: 0 0 6px rgba(76,175,130,0.6); }
+  .status-dot.stopped { background: var(--danger); }
+  .status-label { font-size: 1rem; font-weight: 700; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.75rem; }
+  .stat-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.75rem; }
+  .stat-name { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 1rem; font-weight: 700; margin-top: 0.15rem; }
+  .action-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .action-card h3 { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .action-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .cmd-row { display: flex; gap: 0.5rem; }
+  .log-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .log-toolbar {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .log-toolbar h3 { font-size: 0.9rem; font-weight: 600; }
+  .log-status { font-size: 0.78rem; color: var(--text-muted); margin-left: auto; }
+  .log-box {
+    background: #0a0c10;
+    font-family: 'Consolas', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.82rem;
+    color: #c8d0e0;
+    height: 400px;
+    overflow-y: scroll;
+    padding: 1rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
 </style>
 </head>
 <body>
@@ -429,12 +513,14 @@ HTML = """<!DOCTYPE html>
     <div class="subtitle">Mod management for 1.20.1 / Forge</div>
   </div>
   <div class="repo-tag" id="repoTag">Loading...</div>
+  <button class="ghost sm" id="syncBtn" onclick="triggerSync()" style="margin-left:1rem">Sync to GitHub</button>
 </header>
 <div class="container">
   <div class="tabs">
     <button class="tab-btn active" id="tabbtn-client">Client Mods</button>
     <button class="tab-btn" id="tabbtn-all">All Mods</button>
-    <button class="tab-btn" id="tabBtn-updates">Updates</button>
+    <button class="tab-btn" id="tabbtn-updates">Updates</button>
+    <button class="tab-btn" id="tabbtn-server">Server</button>
   </div>
 
   <!-- CLIENT MODS TAB -->
@@ -501,6 +587,60 @@ HTML = """<!DOCTYPE html>
       </div>
     </div>
   </div>
+
+  <!-- SERVER TAB -->
+  <div class="tab-panel" id="tab-server">
+    <div class="server-grid">
+      <div class="status-card">
+        <h3>Server Status</h3>
+        <div class="status-row">
+          <div class="status-dot" id="srvDot"></div>
+          <span class="status-label" id="srvStatusLabel">Loading...</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-name">Players</div>
+            <div class="stat-value" id="srvPlayers">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-name">MSPT</div>
+            <div class="stat-value" id="srvMspt">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-name">CPU</div>
+            <div class="stat-value" id="srvCpu">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-name">RAM</div>
+            <div class="stat-value" id="srvRam">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="action-card">
+        <h3>Actions</h3>
+        <div class="action-btns">
+          <button class="success-btn" id="srvStartBtn">Start</button>
+          <button class="danger" id="srvStopBtn">Stop</button>
+          <button class="warning-btn" id="srvRestartBtn">Restart</button>
+        </div>
+        <div>
+          <h3 style="margin-bottom:0.5rem">Send Command</h3>
+          <div class="cmd-row">
+            <input type="text" id="srvCmdInput" placeholder="e.g. say Hello"/>
+            <button id="srvSendBtn">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="log-panel">
+      <div class="log-toolbar">
+        <h3>Server Logs</h3>
+        <button class="ghost sm" id="srvClearLogBtn">Clear</button>
+        <span class="log-status" id="srvLogStatus">Disconnected</span>
+      </div>
+      <div class="log-box" id="srvLogBox"></div>
+    </div>
+  </div>
 </div>
 <div class="toast-container" id="toasts"></div>
 <script>
@@ -510,15 +650,15 @@ var allMods = [];
 var updatesData = [];
 var activeTab = 'client';
 var allModsLoaded = false;
-
-// Tab wiring
-document.getElementById('tabBtn-updates').addEventListener('click', function() { switchTab('updates'); });
-document.getElementById('tabBtn-updates').id = 'tabBtn-updates';
+var serverStatusInterval = null;
+var logEventSource = null;
+var serverRunning = false;
 
 (function() {
   document.getElementById('tabbtn-client').addEventListener('click', function() { switchTab('client'); });
   document.getElementById('tabbtn-all').addEventListener('click', function() { switchTab('all'); });
-  document.getElementById('tabBtn-updates').addEventListener('click', function() { switchTab('updates'); });
+  document.getElementById('tabbtn-updates').addEventListener('click', function() { switchTab('updates'); });
+  document.getElementById('tabbtn-server').addEventListener('click', function() { switchTab('server'); });
   document.getElementById('refreshClientBtn').addEventListener('click', function() { loadMods(); });
   document.getElementById('refreshAllBtn').addEventListener('click', function() { loadAllMods(); });
   document.getElementById('searchBtn').addEventListener('click', function() { doSearch(); });
@@ -528,18 +668,33 @@ document.getElementById('tabBtn-updates').id = 'tabBtn-updates';
   document.getElementById('allModsFilter').addEventListener('input', function() { filterAllMods(); });
   document.getElementById('checkUpdatesBtn').addEventListener('click', function() { checkUpdates(); });
   document.getElementById('updateAllBtn').addEventListener('click', function() { updateAll(); });
+  document.getElementById('srvStartBtn').addEventListener('click', function() { serverAction('start_server'); });
+  document.getElementById('srvStopBtn').addEventListener('click', function() { serverAction('stop_server'); });
+  document.getElementById('srvRestartBtn').addEventListener('click', function() { serverAction('restart_server'); });
+  document.getElementById('srvSendBtn').addEventListener('click', function() { sendServerCommand(); });
+  document.getElementById('srvCmdInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendServerCommand();
+  });
+  document.getElementById('srvClearLogBtn').addEventListener('click', function() {
+    document.getElementById('srvLogBox').textContent = '';
+  });
 })();
 
 function switchTab(tab) {
   activeTab = tab;
-  var tabs = ['client', 'all', 'updates'];
-  var btnIds = ['tabbtn-client', 'tabbtn-all', 'tabBtn-updates'];
+  var tabs = ['client', 'all', 'updates', 'server'];
+  var btnIds = ['tabbtn-client', 'tabbtn-all', 'tabbtn-updates', 'tabbtn-server'];
   tabs.forEach(function(t, i) {
     document.getElementById(btnIds[i]).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   if (tab === 'all' && !allModsLoaded) {
     loadAllMods();
+  }
+  if (tab === 'server') {
+    startServerTab();
+  } else {
+    stopServerTab();
   }
 }
 
@@ -769,21 +924,27 @@ function renderAllMods(mods) {
     var sid = m.side || 'both';
     var isOpt = !!m.optional;
     var isDef = !!m.default;
+    var isDisabled = !!m.disabled;
     var slug = m.slug;
     var hasMod = !!m.mod_id;
-    return '<div class="mod-item" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
+    return '<div class="mod-item' + (isDisabled ? ' disabled-mod' : '') + '" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
       '<div class="mod-item-row">' +
         (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
           '<div class="mod-name">' + escHtml(m.name) + '</div>' +
           '<div class="mod-meta">' +
             '<span class="side-badge ' + sideBadgeClass(sid) + '">' + escHtml(sid) + '</span>' +
+            (isDisabled ? '<span class="disabled-badge">disabled</span>' : '') +
             (isOpt ? '<span class="optional-badge">optional</span>' : '') +
             (isOpt && isDef ? '<span class="default-badge">default on</span>' : '') +
             (hasMod ? ' <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener" style="font-size:0.78rem">Modrinth</a>' : '') +
           '</div>' +
         '</div>' +
         '<div class="mod-actions">' +
+          '<label class="toggle" title="' + (isDisabled ? 'Enable mod' : 'Disable mod') + '">' +
+            '<input type="checkbox" class="dis-toggle" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" ' + (!isDisabled ? 'checked' : '') + '/>' +
+            '<span class="toggle-slider"></span>' +
+          '</label>' +
           (hasMod ? '<button class="ghost sm update-mod-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Update</button>' : '') +
           '<button class="ghost sm edit-btn" data-slug="' + escHtml(slug) + '">Edit</button>' +
         '</div>' +
@@ -842,6 +1003,9 @@ function renderAllMods(mods) {
   el.querySelectorAll('.update-mod-btn').forEach(function(b) {
     b.addEventListener('click', function() { updateSingleMod(b.dataset.slug, b.dataset.name, b); });
   });
+  el.querySelectorAll('.dis-toggle').forEach(function(chk) {
+    chk.addEventListener('change', function() { toggleDisableMod(chk.dataset.slug, chk.dataset.name, chk); });
+  });
   mods.forEach(function(m) {
     var defInput = document.getElementById('def-' + m.slug);
     if (defInput) {
@@ -851,6 +1015,28 @@ function renderAllMods(mods) {
       });
     }
   });
+}
+
+async function toggleDisableMod(slug, name, chk) {
+  chk.disabled = true;
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/toggle-disable', { method: 'POST' });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Toggle failed');
+    var nowDisabled = data.disabled;
+    toast((nowDisabled ? 'Disabled: ' : 'Enabled: ') + name);
+    var modItem = document.getElementById('allmod-' + slug);
+    if (modItem) {
+      modItem.classList.toggle('disabled-mod', nowDisabled);
+      var entry = allMods.find(function(m) { return m.slug === slug; });
+      if (entry) entry.disabled = nowDisabled;
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    chk.checked = !chk.checked;
+  } finally {
+    chk.disabled = false;
+  }
 }
 
 function toggleEditPanel(slug) {
@@ -913,8 +1099,10 @@ async function saveMod(slug, name) {
       var metaEl = modItem.querySelector('.mod-meta');
       if (metaEl) {
         var modrinthLink = metaEl.querySelector('a') ? metaEl.querySelector('a').outerHTML : '';
+        var isDisabled = !!(entry && entry.disabled);
         metaEl.innerHTML =
           '<span class="side-badge ' + sideBadgeClass(side) + '">' + escHtml(side) + '</span>' +
+          (isDisabled ? '<span class="disabled-badge">disabled</span>' : '') +
           (optional ? '<span class="optional-badge">optional</span>' : '') +
           (optional && defaultOn ? '<span class="default-badge">default on</span>' : '') +
           (modrinthLink ? ' ' + modrinthLink : '');
@@ -1093,6 +1281,142 @@ async function updateAll() {
   btn.style.display = 'none';
 }
 
+/* ===== SERVER TAB ===== */
+function startServerTab() {
+  fetchServerStatus();
+  if (!serverStatusInterval) {
+    serverStatusInterval = setInterval(fetchServerStatus, 5000);
+  }
+  connectServerLogs();
+}
+
+function stopServerTab() {
+  if (serverStatusInterval) {
+    clearInterval(serverStatusInterval);
+    serverStatusInterval = null;
+  }
+  if (logEventSource) {
+    logEventSource.close();
+    logEventSource = null;
+    document.getElementById('srvLogStatus').textContent = 'Disconnected';
+  }
+}
+
+async function fetchServerStatus() {
+  try {
+    var res = await fetch('/api/server/status');
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Status error');
+    updateServerStatus(data);
+  } catch(e) {
+    document.getElementById('srvDot').className = 'status-dot stopped';
+    document.getElementById('srvStatusLabel').textContent = 'Error';
+  }
+}
+
+function updateServerStatus(data) {
+  var running = !!data.running;
+  serverRunning = running;
+  var dot = document.getElementById('srvDot');
+  dot.className = 'status-dot ' + (running ? 'running' : 'stopped');
+  document.getElementById('srvStatusLabel').textContent = running ? 'Running' : 'Stopped';
+  document.getElementById('srvPlayers').textContent = data.players !== undefined ? String(data.players) : '-';
+  document.getElementById('srvMspt').textContent = data.mspt !== undefined ? String(data.mspt) : '-';
+  document.getElementById('srvCpu').textContent = data.cpu !== undefined ? data.cpu + '%' : '-';
+  document.getElementById('srvRam').textContent = data.mem_mb !== undefined ? data.mem_mb + ' MB' : '-';
+  document.getElementById('srvStartBtn').disabled = running;
+  document.getElementById('srvStopBtn').disabled = !running;
+  document.getElementById('srvRestartBtn').disabled = !running;
+}
+
+async function serverAction(action) {
+  var btnId = action === 'start_server' ? 'srvStartBtn' : action === 'stop_server' ? 'srvStopBtn' : 'srvRestartBtn';
+  var btn = document.getElementById(btnId);
+  if (btn) btn.disabled = true;
+  try {
+    var res = await fetch('/api/server/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: action })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Action failed');
+    toast('Action sent: ' + action.replace('_server', ''));
+    setTimeout(fetchServerStatus, 1500);
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function sendServerCommand() {
+  var inp = document.getElementById('srvCmdInput');
+  var cmd = inp.value.trim();
+  if (!cmd) return;
+  inp.value = '';
+  try {
+    var res = await fetch('/api/server/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Command failed');
+    appendLog('> ' + cmd);
+  } catch(e) {
+    toast('Command error: ' + e.message, 'error');
+  }
+}
+
+function appendLog(line) {
+  var box = document.getElementById('srvLogBox');
+  var atBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 10;
+  box.textContent += line + '\n';
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+function connectServerLogs() {
+  if (logEventSource) {
+    logEventSource.close();
+    logEventSource = null;
+  }
+  var statusEl = document.getElementById('srvLogStatus');
+  statusEl.textContent = 'Connecting...';
+  try {
+    logEventSource = new EventSource('/api/server/logs');
+    logEventSource.onopen = function() {
+      statusEl.textContent = 'Connected';
+    };
+    logEventSource.onmessage = function(e) {
+      if (e.data && e.data !== 'ping') {
+        appendLog(e.data);
+      }
+    };
+    logEventSource.onerror = function() {
+      statusEl.textContent = 'Reconnecting...';
+    };
+  } catch(e) {
+    statusEl.textContent = 'Error';
+  }
+}
+
+async function triggerSync() {
+  var btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  btn.textContent = 'Syncing...';
+  try {
+    var res = await fetch('/api/sync', { method: 'POST' });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Sync failed');
+    toast('Sync triggered — modpack-sync is running', 'success');
+  } catch(e) {
+    toast('Sync error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sync to GitHub';
+  }
+}
+
 // Initial load
 loadMods();
 </script>
@@ -1106,6 +1430,12 @@ def gh_headers() -> dict:
         "Authorization": f"Bearer {GITHUB_PAT}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+
+def crafty_headers() -> dict:
+    return {
+        "Authorization": f"Bearer {CRAFTY_TOKEN}",
     }
 
 
@@ -1234,7 +1564,7 @@ async def get_modrinth_versions(client: httpx.AsyncClient, project_id: str) -> l
 
 
 async def fetch_and_parse_entry(client: httpx.AsyncClient, entry: dict, client_only: bool = False) -> Optional[dict]:
-    """Fetch a .pw.toml entry from GitHub and return parsed mod info."""
+    """Fetch a .pw.toml or .pw.toml.disabled entry from GitHub and return parsed mod info."""
     try:
         download_url = entry.get("download_url")
         if not download_url:
@@ -1245,9 +1575,13 @@ async def fetch_and_parse_entry(client: httpx.AsyncClient, entry: dict, client_o
         raw = fr.text
         data = parse_toml_simple(raw)
         side = data.get("side", "both")
+
+        fname = entry["name"]
+        disabled = fname.endswith(".pw.toml.disabled")
+        slug = fname.replace(".pw.toml.disabled", "").replace(".pw.toml", "")
+
         if client_only and side != "client":
             return None
-        slug = entry["name"].replace(".pw.toml", "")
         mod_id = data.get("update", {}).get("modrinth", {}).get("mod-id", "")
         version_id = data.get("update", {}).get("modrinth", {}).get("version", "")
         option = data.get("option", {})
@@ -1260,6 +1594,7 @@ async def fetch_and_parse_entry(client: httpx.AsyncClient, entry: dict, client_o
             "side": side,
             "optional": option.get("optional", False),
             "default": option.get("default", False),
+            "disabled": disabled,
             "icon": None,
         }
     except Exception:
@@ -1278,7 +1613,7 @@ async def enrich_icon(client: httpx.AsyncClient, mod: dict) -> dict:
 
 
 async def list_all_pw_files(client: httpx.AsyncClient) -> list:
-    """Return all .pw.toml entries from the mods directory."""
+    """Return all .pw.toml and .pw.toml.disabled entries from the mods directory."""
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/mods"
     r = await client.get(url, headers=gh_headers())
     if r.status_code == 404:
@@ -1287,7 +1622,13 @@ async def list_all_pw_files(client: httpx.AsyncClient) -> list:
         raise HTTPException(401, "GitHub authentication failed — check GITHUB_PAT")
     r.raise_for_status()
     entries = r.json()
-    return [e for e in entries if isinstance(e, dict) and e.get("name", "").endswith(".pw.toml")]
+    return [
+        e for e in entries
+        if isinstance(e, dict) and (
+            e.get("name", "").endswith(".pw.toml") or
+            e.get("name", "").endswith(".pw.toml.disabled")
+        )
+    ]
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -1438,6 +1779,14 @@ class UpdateModRequest(BaseModel):
     version_id: Optional[str] = None
 
 
+class ServerActionRequest(BaseModel):
+    action: str
+
+
+class ServerCommandRequest(BaseModel):
+    command: str
+
+
 @app.post("/api/mods")
 async def add_mod(req: AddModRequest):
     if not GITHUB_PAT or not GITHUB_REPO:
@@ -1503,6 +1852,94 @@ async def add_mod(req: AddModRequest):
             raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
 
     return {"ok": True, "slug": slug, "name": name, "version_id": version_id}
+
+
+@app.post("/api/mods/{slug}/toggle-disable")
+async def toggle_disable_mod(slug: str):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        enabled_path = f"mods/{slug}.pw.toml"
+        disabled_path = f"mods/{slug}.pw.toml.disabled"
+
+        enabled_file = await github_get_file(client, enabled_path)
+        disabled_file = await github_get_file(client, disabled_path)
+
+        if enabled_file:
+            # Currently enabled → disable it
+            sha = enabled_file["sha"]
+            raw_b64 = enabled_file.get("content", "")
+            try:
+                content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+            except Exception:
+                raise HTTPException(500, "Failed to decode file content")
+
+            data = parse_toml_simple(content)
+            name = data.get("name", slug)
+
+            # Delete old .pw.toml, create .pw.toml.disabled
+            try:
+                await github_delete_file(client, enabled_path, f"Disable mod: {name}", sha)
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(500, f"GitHub delete failed: {e.response.text[:200]}")
+
+            dis_sha = disabled_file["sha"] if disabled_file else None
+            try:
+                await github_put_file(client, disabled_path, content, f"Disable mod: {name}", dis_sha)
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(500, f"GitHub create disabled failed: {e.response.text[:200]}")
+
+            # Rename jar on server filesystem
+            jar_filename = data.get("filename", f"{slug}.jar")
+            jar_path = os.path.join(SERVER_MODS_DIR, jar_filename)
+            jar_disabled_path = jar_path + ".disabled"
+            try:
+                if os.path.exists(jar_path):
+                    os.rename(jar_path, jar_disabled_path)
+            except Exception:
+                pass  # Don't fail if jar not found
+
+            return {"ok": True, "slug": slug, "name": name, "disabled": True}
+
+        elif disabled_file:
+            # Currently disabled → enable it
+            sha = disabled_file["sha"]
+            raw_b64 = disabled_file.get("content", "")
+            try:
+                content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+            except Exception:
+                raise HTTPException(500, "Failed to decode file content")
+
+            data = parse_toml_simple(content)
+            name = data.get("name", slug)
+
+            # Delete .pw.toml.disabled, create .pw.toml
+            try:
+                await github_delete_file(client, disabled_path, f"Enable mod: {name}", sha)
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(500, f"GitHub delete failed: {e.response.text[:200]}")
+
+            en_sha = enabled_file["sha"] if enabled_file else None
+            try:
+                await github_put_file(client, enabled_path, content, f"Enable mod: {name}", en_sha)
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(500, f"GitHub create enabled failed: {e.response.text[:200]}")
+
+            # Rename jar on server filesystem
+            jar_filename = data.get("filename", f"{slug}.jar")
+            jar_disabled_path = os.path.join(SERVER_MODS_DIR, jar_filename + ".disabled")
+            jar_path = os.path.join(SERVER_MODS_DIR, jar_filename)
+            try:
+                if os.path.exists(jar_disabled_path):
+                    os.rename(jar_disabled_path, jar_path)
+            except Exception:
+                pass  # Don't fail if jar not found
+
+            return {"ok": True, "slug": slug, "name": name, "disabled": False}
+
+        else:
+            raise HTTPException(404, f"Mod file not found: {slug}")
 
 
 @app.post("/api/mods/{slug}/update")
@@ -1697,6 +2134,147 @@ async def remove_mod(slug: str):
             raise HTTPException(500, f"GitHub delete failed: {e.response.text[:200]}")
 
     return {"ok": True, "slug": slug, "name": name}
+
+
+# ===== SERVER (CRAFTY) ENDPOINTS =====
+
+@app.get("/api/server/status")
+async def server_status():
+    if not CRAFTY_URL or not CRAFTY_TOKEN or not CRAFTY_SERVER_ID:
+        raise HTTPException(500, "CRAFTY_URL, CRAFTY_TOKEN, and CRAFTY_SERVER_ID are required")
+
+    url = f"{CRAFTY_URL}/api/v2/servers/{CRAFTY_SERVER_ID}/stats"
+    async with httpx.AsyncClient(timeout=10, verify=False) as client:
+        try:
+            r = await client.get(url, headers=crafty_headers())
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(502, f"Crafty API error: {e.response.status_code}")
+        except Exception as e:
+            raise HTTPException(502, f"Crafty connection error: {str(e)}")
+
+    data = r.json()
+    # Crafty v2 wraps in {"status": "ok", "data": {...}}
+    info = data.get("data", data)
+    running = info.get("running", False)
+    return {
+        "running": running,
+        "players": info.get("online", info.get("players", 0)),
+        "mspt": info.get("mspt", info.get("avg_tick_ms", None)),
+        "cpu": info.get("cpu", None),
+        "mem_percent": info.get("mem_percent", None),
+        "mem_mb": info.get("mem", info.get("mem_mb", None)),
+    }
+
+
+@app.post("/api/server/action")
+async def server_action(req: ServerActionRequest):
+    if not CRAFTY_URL or not CRAFTY_TOKEN or not CRAFTY_SERVER_ID:
+        raise HTTPException(500, "CRAFTY_URL, CRAFTY_TOKEN, and CRAFTY_SERVER_ID are required")
+
+    valid_actions = {"start_server", "stop_server", "restart_server"}
+    if req.action not in valid_actions:
+        raise HTTPException(400, f"Invalid action. Must be one of: {', '.join(valid_actions)}")
+
+    url = f"{CRAFTY_URL}/api/v2/servers/{CRAFTY_SERVER_ID}/action/{req.action}"
+    async with httpx.AsyncClient(timeout=15, verify=False) as client:
+        try:
+            r = await client.post(url, headers=crafty_headers())
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(502, f"Crafty API error: {e.response.status_code} {e.response.text[:200]}")
+        except Exception as e:
+            raise HTTPException(502, f"Crafty connection error: {str(e)}")
+
+    return {"ok": True, "action": req.action}
+
+
+@app.post("/api/server/command")
+async def server_command(req: ServerCommandRequest):
+    if not CRAFTY_URL or not CRAFTY_TOKEN or not CRAFTY_SERVER_ID:
+        raise HTTPException(500, "CRAFTY_URL, CRAFTY_TOKEN, and CRAFTY_SERVER_ID are required")
+
+    if not req.command.strip():
+        raise HTTPException(400, "Command cannot be empty")
+
+    url = f"{CRAFTY_URL}/api/v2/servers/{CRAFTY_SERVER_ID}/stdin"
+    async with httpx.AsyncClient(timeout=10, verify=False) as client:
+        try:
+            r = await client.post(url, headers=crafty_headers(), json={"command": req.command})
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(502, f"Crafty API error: {e.response.status_code}")
+        except Exception as e:
+            raise HTTPException(502, f"Crafty connection error: {str(e)}")
+
+    return {"ok": True, "command": req.command}
+
+
+@app.get("/api/server/logs")
+async def server_logs():
+    if not CRAFTY_URL or not CRAFTY_TOKEN or not CRAFTY_SERVER_ID:
+        raise HTTPException(500, "CRAFTY_URL, CRAFTY_TOKEN, and CRAFTY_SERVER_ID are required")
+
+    async def log_stream():
+        seen_lines: set = set()
+        url = f"{CRAFTY_URL}/api/v2/servers/{CRAFTY_SERVER_ID}/logs"
+        async with httpx.AsyncClient(timeout=10, verify=False) as client:
+            while True:
+                try:
+                    r = await client.get(url, headers=crafty_headers())
+                    if r.status_code == 200:
+                        data = r.json()
+                        log_lines = data.get("data", data) if isinstance(data, dict) else data
+                        if isinstance(log_lines, list):
+                            for line in log_lines:
+                                line_str = str(line).rstrip()
+                                if line_str not in seen_lines:
+                                    seen_lines.add(line_str)
+                                    yield f"data: {line_str}\n\n"
+                        elif isinstance(log_lines, str):
+                            for line in log_lines.splitlines():
+                                line = line.rstrip()
+                                if line and line not in seen_lines:
+                                    seen_lines.add(line)
+                                    yield f"data: {line}\n\n"
+                except Exception:
+                    pass
+                yield "data: ping\n\n"
+                await asyncio.sleep(2)
+
+    return StreamingResponse(
+        log_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.post("/api/sync")
+async def trigger_sync():
+    if not PORTAINER_TOKEN or not PORTAINER_STACK_ID:
+        raise HTTPException(500, "PORTAINER_TOKEN and PORTAINER_STACK_ID are required")
+    headers = {"X-API-Key": PORTAINER_TOKEN}
+    endpoint_id = PORTAINER_ENDPOINT_ID
+    stack_id = PORTAINER_STACK_ID
+    async with httpx.AsyncClient(verify=False, timeout=15) as client:
+        # Stop first (ignore error if already stopped)
+        await client.post(
+            f"{PORTAINER_URL}/api/stacks/{stack_id}/stop",
+            params={"endpointId": endpoint_id},
+            headers=headers,
+        )
+        # Start
+        r = await client.post(
+            f"{PORTAINER_URL}/api/stacks/{stack_id}/start",
+            params={"endpointId": endpoint_id},
+            headers=headers,
+        )
+        if r.status_code not in (200, 400):  # 400 = already active (race), acceptable
+            raise HTTPException(502, f"Portainer error: {r.status_code} {r.text[:100]}")
+    return {"ok": True}
 
 
 if __name__ == "__main__":
