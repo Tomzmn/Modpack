@@ -1,0 +1,13 @@
+name = "Dungeons Enhanced"
+filename = "dungeons_enhanced-1.20.1-5.4.3.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/3IAJcJXa/versions/9SSVYA1L/dungeons_enhanced-1.20.1-5.4.3.jar"
+hash-format = "sha512"
+hash = "60fbdead8915b40de86241fc0212379d9e485e3a45787195704039be8bd13ae9b87572e955a41081202698642703f18e56a43a3829ba7942d78b24003e7bd921"
+
+[update]
+[update.modrinth]
+mod-id = "3IAJcJXa"
+version = "9SSVYA1L"

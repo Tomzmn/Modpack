@@ -1,0 +1,13 @@
+name = "Giant Natural Additions"
+filename = "giant_natural_additions-2.0.0-forge-1.20.1.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/hnrzQdHf/versions/YKyMUXZe/giant_natural_additions-2.0.0-forge-1.20.1.jar"
+hash-format = "sha512"
+hash = "67e5de4fb70d28cb8bfe18ba1c0ee5890d027eca52c581f97f27baa01ef5803ebbf41d95c1d55cce00d32401a53abd0fef277a9b603486f5d9820da95047f0f6"
+
+[update]
+[update.modrinth]
+mod-id = "hnrzQdHf"
+version = "YKyMUXZe"

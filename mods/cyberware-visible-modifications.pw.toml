@@ -1,0 +1,13 @@
+name = "Cyberware: Visible Modifications"
+filename = "cyberwareplus-1.5.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/EZEvw3rN/versions/JJWBLsUH/cyberwareplus-1.5.jar"
+hash-format = "sha512"
+hash = "52dbad2637fe5075861a1b78bce875f713f98821e213c0caa769fc7fdb73041352298f22ca1bf6465ac703e62608a48b09b58357cb596dc27f2a56e9e263c088"
+
+[update]
+[update.modrinth]
+mod-id = "EZEvw3rN"
+version = "JJWBLsUH"

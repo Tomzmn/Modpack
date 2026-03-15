@@ -1,0 +1,13 @@
+name = "More Industrial Foregoing Addons (MIFA)"
+filename = "mifa-forge-1.20.x-1.1.1.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/Ig6QciUH/versions/NiaZP7xJ/mifa-forge-1.20.x-1.1.1.jar"
+hash-format = "sha512"
+hash = "d8244361165908e0b2dece902b8aa8dbc562f745ba877e3c00a9cff4dde742ed6c98190d4bfea1d5ea78b8b43678d29682d9e5b7c1cac9d34bb053a3c10877ba"
+
+[update]
+[update.modrinth]
+mod-id = "Ig6QciUH"
+version = "NiaZP7xJ"

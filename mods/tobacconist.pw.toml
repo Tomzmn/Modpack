@@ -1,0 +1,13 @@
+name = "Tobacconist"
+filename = "tobacconistmod-2.3.1-forge-1.20.1.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/67HcuvfL/versions/Hm7c9FoS/tobacconistmod-2.3.1-forge-1.20.1.jar"
+hash-format = "sha512"
+hash = "03d3badba074f89fabaa9badd1e18f60972f1a8c840a660bd77ab6f44040f1959ca368963218b0b71ae56a51cf7cc886581eaee1c2734f2de2744b5fec74bbac"
+
+[update]
+[update.modrinth]
+mod-id = "67HcuvfL"
+version = "Hm7c9FoS"

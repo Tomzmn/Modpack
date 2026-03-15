@@ -1,0 +1,13 @@
+name = "The Knocker"
+filename = "the_knocker-1.5.0-forge-1.20.1.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/hTju2zcV/versions/LpftF7PS/the_knocker-1.5.0-forge-1.20.1.jar"
+hash-format = "sha512"
+hash = "0e5cc6358a9072e5492987bffef8d9bc28306b495c871206a282c3b1f151b892dd2c9c7067c6604f0d65a803cae8a5dd5cf3eb6763eb836093aac62e370c18e1"
+
+[update]
+[update.modrinth]
+mod-id = "hTju2zcV"
+version = "LpftF7PS"

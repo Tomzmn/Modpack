@@ -1,0 +1,13 @@
+name = "DGLib"
+filename = "dglib-alpha_1.5.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/vZTluAdw/versions/qh1d0Wh9/dglib-alpha_1.5.jar"
+hash-format = "sha512"
+hash = "e4805847800886ab76666786b86c7caf29a9e1048b2b5ad185db0b73b535dd6514584f40f0136c180a16100635c3ccd18032c42d2e9f4216c39586cb7d4b5b9b"
+
+[update]
+[update.modrinth]
+mod-id = "vZTluAdw"
+version = "qh1d0Wh9"
