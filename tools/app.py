@@ -3,9 +3,10 @@ import re
 import base64
 import tomllib
 import asyncio
+import hashlib
 from typing import Optional
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 import uvicorn
@@ -133,6 +134,15 @@ HTML = """<!DOCTYPE html>
     transition: border-color 0.2s;
   }
   input[type="text"]:focus { border-color: var(--accent); }
+  input[type="file"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
   button {
     background: var(--accent);
     color: #fff;
@@ -158,6 +168,8 @@ HTML = """<!DOCTYPE html>
   button.ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
   button.success-btn { background: var(--success); }
   button.success-btn:hover { background: #3d9e6d; }
+  button.warning-btn { background: #e0922e; }
+  button.warning-btn:hover { background: #f0a030; }
   .mod-list { display: flex; flex-direction: column; gap: 0.6rem; }
   .mod-item {
     background: var(--surface2);
@@ -283,6 +295,15 @@ HTML = """<!DOCTYPE html>
     font-size: 0.72rem;
     font-weight: 700;
   }
+  .update-badge {
+    background: rgba(224,146,46,0.18);
+    border: 1px solid #e0922e;
+    color: #f0b050;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
 
   /* Inline edit panel */
   .edit-panel {
@@ -295,8 +316,18 @@ HTML = """<!DOCTYPE html>
   }
   .edit-panel.open { display: flex; }
   .edit-panel-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-  .edit-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; min-width: 70px; }
-  .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+  .edit-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; min-width: 80px; }
+  .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; flex-wrap: wrap; }
+  .edit-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.25rem;
+  }
 
   /* Segmented button */
   .seg-group { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -362,6 +393,33 @@ HTML = """<!DOCTYPE html>
   }
   .filter-bar input { max-width: 320px; flex: none; }
   .filter-count { color: var(--text-muted); font-size: 0.85rem; margin-left: auto; }
+
+  /* Updates tab */
+  .updates-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .updates-toolbar {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .updates-toolbar h2 { font-size: 1rem; font-weight: 600; }
+  .update-arrow { color: var(--text-muted); font-size: 0.8rem; }
+  .update-version-new { color: var(--success); font-size: 0.8rem; font-weight: 600; }
+  .update-version-old { color: var(--text-muted); font-size: 0.8rem; }
+
+  /* Upload section */
+  .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
 </style>
 </head>
 <body>
@@ -374,8 +432,9 @@ HTML = """<!DOCTYPE html>
 </header>
 <div class="container">
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('client')">Client Mods</button>
-    <button class="tab-btn" onclick="switchTab('all')">All Mods</button>
+    <button class="tab-btn active" id="tabbtn-client">Client Mods</button>
+    <button class="tab-btn" id="tabbtn-all">All Mods</button>
+    <button class="tab-btn" id="tabBtn-updates">Updates</button>
   </div>
 
   <!-- CLIENT MODS TAB -->
@@ -385,7 +444,7 @@ HTML = """<!DOCTYPE html>
         <div class="panel-header">
           <h2>Installed Client Mods</h2>
           <span class="badge" id="modCount">0</span>
-          <button class="ghost sm refresh-btn" onclick="loadMods()" title="Refresh">Refresh</button>
+          <button class="ghost sm refresh-btn" id="refreshClientBtn">Refresh</button>
         </div>
         <div class="panel-body">
           <div id="modList" class="mod-list">
@@ -399,8 +458,8 @@ HTML = """<!DOCTYPE html>
         </div>
         <div class="panel-body">
           <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search for mods (1.20.1 / Forge)..." onkeydown="if(event.key==='Enter') doSearch()"/>
-            <button onclick="doSearch()" id="searchBtn">Search</button>
+            <input type="text" id="searchInput" placeholder="Search for mods (1.20.1 / Forge)..."/>
+            <button id="searchBtn">Search</button>
           </div>
           <div id="searchResults" class="mod-list">
             <div class="empty">Search for mods to add to your pack.</div>
@@ -414,13 +473,30 @@ HTML = """<!DOCTYPE html>
   <div class="tab-panel" id="tab-all">
     <div class="all-mods-panel">
       <div class="filter-bar">
-        <input type="text" id="allModsFilter" placeholder="Filter mods by name..." oninput="filterAllMods()"/>
-        <button class="ghost sm" onclick="loadAllMods()">Refresh</button>
+        <input type="text" id="allModsFilter" placeholder="Filter mods by name..."/>
+        <button class="ghost sm" id="refreshAllBtn">Refresh</button>
         <span class="filter-count" id="allModsCount"></span>
       </div>
       <div class="panel-body">
         <div id="allModsList" class="mod-list">
           <div class="loading"><div class="spinner"></div> Loading all mods...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPDATES TAB -->
+  <div class="tab-panel" id="tab-updates">
+    <div class="updates-panel">
+      <div class="updates-toolbar">
+        <h2>Mod Updates</h2>
+        <button id="checkUpdatesBtn">Check for Updates</button>
+        <button class="success-btn" id="updateAllBtn" style="display:none">Update All</button>
+        <span class="filter-count" id="updatesCount"></span>
+      </div>
+      <div class="panel-body">
+        <div id="updatesList" class="mod-list">
+          <div class="empty">Click "Check for Updates" to scan all mods.</div>
         </div>
       </div>
     </div>
@@ -431,16 +507,37 @@ HTML = """<!DOCTYPE html>
 var installedSlugs = new Set();
 var installedMods = [];
 var allMods = [];
+var updatesData = [];
 var activeTab = 'client';
 var allModsLoaded = false;
 
+// Tab wiring
+document.getElementById('tabBtn-updates').addEventListener('click', function() { switchTab('updates'); });
+document.getElementById('tabBtn-updates').id = 'tabBtn-updates';
+
+(function() {
+  document.getElementById('tabbtn-client').addEventListener('click', function() { switchTab('client'); });
+  document.getElementById('tabbtn-all').addEventListener('click', function() { switchTab('all'); });
+  document.getElementById('tabBtn-updates').addEventListener('click', function() { switchTab('updates'); });
+  document.getElementById('refreshClientBtn').addEventListener('click', function() { loadMods(); });
+  document.getElementById('refreshAllBtn').addEventListener('click', function() { loadAllMods(); });
+  document.getElementById('searchBtn').addEventListener('click', function() { doSearch(); });
+  document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doSearch();
+  });
+  document.getElementById('allModsFilter').addEventListener('input', function() { filterAllMods(); });
+  document.getElementById('checkUpdatesBtn').addEventListener('click', function() { checkUpdates(); });
+  document.getElementById('updateAllBtn').addEventListener('click', function() { updateAll(); });
+})();
+
 function switchTab(tab) {
   activeTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
-    b.classList.toggle('active', (i === 0 && tab === 'client') || (i === 1 && tab === 'all'));
+  var tabs = ['client', 'all', 'updates'];
+  var btnIds = ['tabbtn-client', 'tabbtn-all', 'tabBtn-updates'];
+  tabs.forEach(function(t, i) {
+    document.getElementById(btnIds[i]).classList.toggle('active', t === tab);
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
-  document.getElementById('tab-client').classList.toggle('active', tab === 'client');
-  document.getElementById('tab-all').classList.toggle('active', tab === 'all');
   if (tab === 'all' && !allModsLoaded) {
     loadAllMods();
   }
@@ -508,18 +605,18 @@ function renderMods(mods) {
           '</div>' +
         '</div>' +
         '<div class="mod-actions">' +
-          '<button class="sm danger" onclick="removeMod(this)" id="rm-' + escHtml(m.slug) + '">Remove</button>' +
+          '<button class="sm danger rm-btn" data-slug="' + escHtml(m.slug) + '" data-name="' + escHtml(m.name) + '" id="rm-' + escHtml(m.slug) + '">Remove</button>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
+  el.querySelectorAll('.rm-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { removeMod(btn.dataset.slug, btn.dataset.name, btn); });
+  });
 }
 
-async function removeMod(btn) {
-  var slug = btn.id.replace('rm-', '');
-  var name = btn.closest('.mod-item').dataset.name || slug;
-  btn.disabled = true;
-  btn.textContent = '...';
+async function removeMod(slug, name, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
   try {
     var res = await fetch('/api/mods/' + encodeURIComponent(slug), { method: 'DELETE' });
     var data = await res.json();
@@ -567,14 +664,35 @@ function renderSearch(results) {
         '<div class="mod-actions">' +
           (already
             ? '<span class="already-badge">Added</span>'
-            : '<button class="sm add-btn" data-pid="' + escHtml(r.project_id) + '" data-slug="' + escHtml(r.slug) + '" data-name="' + escHtml(r.name) + '" id="add-' + escHtml(r.slug) + '">Add</button>'
+            : '<div class="seg-group search-side-seg" id="sseg-' + escHtml(r.slug) + '">' +
+                '<button class="seg-btn active" data-side="client">client</button>' +
+                '<button class="seg-btn" data-side="both">both</button>' +
+                '<button class="seg-btn" data-side="server">server</button>' +
+              '</div>' +
+              '<button class="sm add-btn" data-pid="' + escHtml(r.project_id) + '" data-slug="' + escHtml(r.slug) + '" data-name="' + escHtml(r.name) + '" id="add-' + escHtml(r.slug) + '">Add</button>'
           ) +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
+  el.querySelectorAll('.search-side-seg').forEach(function(seg) {
+    seg.querySelectorAll('.seg-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        seg.querySelectorAll('.seg-btn').forEach(function(x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+  });
   el.querySelectorAll('.add-btn').forEach(function(b) {
-    b.addEventListener('click', function() { addMod(b.dataset.pid, b.dataset.slug, b.dataset.name); });
+    b.addEventListener('click', function() {
+      var seg = document.getElementById('sseg-' + b.dataset.slug);
+      var side = 'client';
+      if (seg) {
+        var active = seg.querySelector('.seg-btn.active');
+        if (active) side = active.dataset.side;
+      }
+      addMod(b.dataset.pid, b.dataset.slug, b.dataset.name, side);
+    });
   });
 }
 
@@ -588,14 +706,15 @@ function refreshSearchBadges() {
   });
 }
 
-async function addMod(projectId, slug, name) {
+async function addMod(projectId, slug, name, side) {
+  side = side || 'client';
   var btn = document.getElementById('add-' + slug);
   if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
   try {
     var res = await fetch('/api/mods', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id: projectId })
+      body: JSON.stringify({ project_id: projectId, side: side })
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Add failed');
@@ -651,6 +770,7 @@ function renderAllMods(mods) {
     var isOpt = !!m.optional;
     var isDef = !!m.default;
     var slug = m.slug;
+    var hasMod = !!m.mod_id;
     return '<div class="mod-item" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
       '<div class="mod-item-row">' +
         (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
@@ -660,14 +780,16 @@ function renderAllMods(mods) {
             '<span class="side-badge ' + sideBadgeClass(sid) + '">' + escHtml(sid) + '</span>' +
             (isOpt ? '<span class="optional-badge">optional</span>' : '') +
             (isOpt && isDef ? '<span class="default-badge">default on</span>' : '') +
-            (m.mod_id ? ' <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener" style="font-size:0.78rem">Modrinth</a>' : '') +
+            (hasMod ? ' <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener" style="font-size:0.78rem">Modrinth</a>' : '') +
           '</div>' +
         '</div>' +
         '<div class="mod-actions">' +
+          (hasMod ? '<button class="ghost sm update-mod-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Update</button>' : '') +
           '<button class="ghost sm edit-btn" data-slug="' + escHtml(slug) + '">Edit</button>' +
         '</div>' +
       '</div>' +
       '<div class="edit-panel" id="edit-' + escHtml(slug) + '">' +
+        '<div class="edit-section-title">Settings</div>' +
         '<div class="edit-panel-row">' +
           '<span class="edit-label">Side</span>' +
           '<div class="seg-group" id="seg-' + escHtml(slug) + '">' +
@@ -690,11 +812,15 @@ function renderAllMods(mods) {
           '<button class="sm success-btn save-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" id="save-' + escHtml(slug) + '">Save</button>' +
           '<button class="sm ghost cancel-btn" data-slug="' + escHtml(slug) + '">Cancel</button>' +
         '</div>' +
+        '<div class="edit-section-title" style="margin-top:0.5rem">Upload JAR Override</div>' +
+        '<div class="edit-panel-row upload-row">' +
+          '<input type="file" accept=".jar" class="jar-input" id="jar-' + escHtml(slug) + '"/>' +
+          '<button class="sm warning-btn upload-jar-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Upload JAR</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
-  // wire up event listeners (avoid inline onclick with quotes)
   el.querySelectorAll('.edit-btn').forEach(function(b) {
     b.addEventListener('click', function() { toggleEditPanel(b.dataset.slug); });
   });
@@ -709,6 +835,12 @@ function renderAllMods(mods) {
   });
   el.querySelectorAll('.cancel-btn').forEach(function(b) {
     b.addEventListener('click', function() { toggleEditPanel(b.dataset.slug); });
+  });
+  el.querySelectorAll('.upload-jar-btn').forEach(function(b) {
+    b.addEventListener('click', function() { uploadJar(b.dataset.slug, b.dataset.name, b); });
+  });
+  el.querySelectorAll('.update-mod-btn').forEach(function(b) {
+    b.addEventListener('click', function() { updateSingleMod(b.dataset.slug, b.dataset.name, b); });
   });
   mods.forEach(function(m) {
     var defInput = document.getElementById('def-' + m.slug);
@@ -731,7 +863,7 @@ function setSide(slug, side) {
   var grp = document.getElementById('seg-' + slug);
   if (!grp) return;
   grp.querySelectorAll('.seg-btn').forEach(function(b) {
-    b.classList.toggle('active', b.textContent.trim() === side);
+    b.classList.toggle('active', b.dataset.side === side);
   });
 }
 
@@ -739,7 +871,7 @@ function getSelectedSide(slug) {
   var grp = document.getElementById('seg-' + slug);
   if (!grp) return 'both';
   var active = grp.querySelector('.seg-btn.active');
-  return active ? active.textContent.trim() : 'both';
+  return active ? active.dataset.side : 'both';
 }
 
 function onOptionalChange(slug) {
@@ -768,17 +900,14 @@ async function saveMod(slug, name) {
     var data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Save failed');
     toast('Saved: ' + name);
-    // update local allMods entry
     var entry = allMods.find(function(m) { return m.slug === slug; });
     if (entry) {
       entry.side = side;
       entry.optional = optional;
       entry.default = defaultOn;
     }
-    // close panel
     var panel = document.getElementById('edit-' + slug);
     if (panel) panel.classList.remove('open');
-    // re-render just the badges in the row
     var modItem = document.getElementById('allmod-' + slug);
     if (modItem) {
       var metaEl = modItem.querySelector('.mod-meta');
@@ -796,6 +925,172 @@ async function saveMod(slug, name) {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
   }
+}
+
+async function uploadJar(slug, name, btn) {
+  var fileInput = document.getElementById('jar-' + slug);
+  if (!fileInput || !fileInput.files.length) {
+    toast('Select a .jar file first', 'error');
+    return;
+  }
+  var file = fileInput.files[0];
+  if (btn) { btn.disabled = true; btn.textContent = 'Uploading...'; }
+  try {
+    var formData = new FormData();
+    formData.append('file', file);
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/upload', {
+      method: 'POST',
+      body: formData
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+    toast('Uploaded JAR for: ' + name);
+    fileInput.value = '';
+  } catch(e) {
+    toast('Upload error: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Upload JAR'; }
+  }
+}
+
+async function updateSingleMod(slug, name, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Updating...'; }
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/update', { method: 'POST' });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Update failed');
+    if (data.updated) {
+      toast('Updated ' + name + ' to ' + data.new_version_id);
+    } else {
+      toast(name + ' is already up to date');
+    }
+  } catch(e) {
+    toast('Update error: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
+  }
+}
+
+/* ===== UPDATES TAB ===== */
+async function checkUpdates() {
+  var btn = document.getElementById('checkUpdatesBtn');
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+  document.getElementById('updatesList').innerHTML = '<div class="loading"><div class="spinner"></div> Checking for updates...</div>';
+  document.getElementById('updateAllBtn').style.display = 'none';
+  document.getElementById('updatesCount').textContent = '';
+  try {
+    var res = await fetch('/api/mods/updates');
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Check failed');
+    updatesData = data;
+    renderUpdates(data);
+  } catch(e) {
+    document.getElementById('updatesList').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
+    toast('Update check failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Check for Updates';
+  }
+}
+
+function renderUpdates(mods) {
+  var el = document.getElementById('updatesList');
+  var withUpdates = mods.filter(function(m) { return m.has_update; });
+  document.getElementById('updatesCount').textContent = withUpdates.length + ' update' + (withUpdates.length !== 1 ? 's' : '') + ' available';
+  if (withUpdates.length > 0) {
+    document.getElementById('updateAllBtn').style.display = '';
+  }
+  if (!withUpdates.length) {
+    el.innerHTML = '<div class="empty">All mods are up to date!</div>';
+    return;
+  }
+  el.innerHTML = withUpdates.map(function(m) {
+    return '<div class="mod-item" id="upd-' + escHtml(m.slug) + '">' +
+      '<div class="mod-item-row">' +
+        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        '<div class="mod-info">' +
+          '<div class="mod-name">' + escHtml(m.name) + '</div>' +
+          '<div class="mod-meta">' +
+            '<span class="update-version-old">' + escHtml(m.current_version || 'unknown') + '</span>' +
+            '<span class="update-arrow"> &#8594; </span>' +
+            '<span class="update-version-new">' + escHtml(m.latest_version_id) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="mod-actions">' +
+          '<span class="update-badge">Update available</span>' +
+          '<button class="sm success-btn upd-btn" data-slug="' + escHtml(m.slug) + '" data-name="' + escHtml(m.name) + '" data-vid="' + escHtml(m.latest_version_id) + '">Update</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.querySelectorAll('.upd-btn').forEach(function(b) {
+    b.addEventListener('click', function() { doUpdateMod(b.dataset.slug, b.dataset.name, b.dataset.vid, b); });
+  });
+}
+
+async function doUpdateMod(slug, name, versionId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Updating...'; }
+  try {
+    var body = {};
+    if (versionId) body.version_id = versionId;
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Update failed');
+    toast('Updated: ' + name);
+    var item = document.getElementById('upd-' + slug);
+    if (item) item.remove();
+    updatesData = updatesData.filter(function(m) { return m.slug !== slug; });
+    var remaining = updatesData.filter(function(m) { return m.has_update; });
+    document.getElementById('updatesCount').textContent = remaining.length + ' update' + (remaining.length !== 1 ? 's' : '') + ' available';
+    if (!remaining.length) {
+      document.getElementById('updatesList').innerHTML = '<div class="empty">All mods are up to date!</div>';
+      document.getElementById('updateAllBtn').style.display = 'none';
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
+  }
+}
+
+async function updateAll() {
+  var btn = document.getElementById('updateAllBtn');
+  btn.disabled = true;
+  btn.textContent = 'Updating all...';
+  var toUpdate = updatesData.filter(function(m) { return m.has_update; });
+  var success = 0;
+  var fail = 0;
+  for (var i = 0; i < toUpdate.length; i++) {
+    var m = toUpdate[i];
+    try {
+      var body = {};
+      if (m.latest_version_id) body.version_id = m.latest_version_id;
+      var res = await fetch('/api/mods/' + encodeURIComponent(m.slug) + '/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'failed');
+      success++;
+      var item = document.getElementById('upd-' + m.slug);
+      if (item) item.remove();
+    } catch(e) {
+      fail++;
+    }
+  }
+  updatesData = updatesData.filter(function(m) { return !m.has_update; });
+  if (success) toast('Updated ' + success + ' mod' + (success !== 1 ? 's' : ''));
+  if (fail) toast(fail + ' update(s) failed', 'error');
+  document.getElementById('updatesCount').textContent = '0 updates available';
+  document.getElementById('updatesList').innerHTML = '<div class="empty">All mods are up to date!</div>';
+  btn.disabled = false;
+  btn.textContent = 'Update All';
+  btn.style.display = 'none';
 }
 
 // Initial load
@@ -821,11 +1116,11 @@ def parse_toml_simple(content: str) -> dict:
         return {}
 
 
-def build_pw_toml(name: str, filename: str, project_id: str, version_id: str, url: str, hash512: str) -> str:
+def build_pw_toml(name: str, filename: str, project_id: str, version_id: str, url: str, hash512: str, side: str = "client") -> str:
     return (
         f'name = "{name}"\n'
         f'filename = "{filename}"\n'
-        f'side = "client"\n'
+        f'side = "{side}"\n'
         f'\n'
         f'[download]\n'
         f'url = "{url}"\n'
@@ -839,6 +1134,19 @@ def build_pw_toml(name: str, filename: str, project_id: str, version_id: str, ur
     )
 
 
+def build_pw_toml_override(name: str, filename: str, hash512: str, side: str = "both") -> str:
+    """Build a .pw.toml for a local JAR override (no Modrinth update section)."""
+    return (
+        f'name = "{name}"\n'
+        f'filename = "{filename}"\n'
+        f'side = "{side}"\n'
+        f'\n'
+        f'[download]\n'
+        f'hash-format = "sha512"\n'
+        f'hash = "{hash512}"\n'
+    )
+
+
 def patch_toml_content(raw: str, side: str, optional: bool, default_on: bool) -> str:
     """Patch a .pw.toml string with new side/optional/default values."""
 
@@ -848,12 +1156,6 @@ def patch_toml_content(raw: str, side: str, optional: bool, default_on: bool) ->
     # 2. Handle [option] section
     option_block = f'[option]\noptional = true\ndefault = {"true" if default_on else "false"}\n'
 
-    # Check if [option] section already exists
-    option_section_re = re.compile(
-        r'^\[option\][^\[]*',
-        re.MULTILINE | re.DOTALL
-    )
-    # More precise: match [option] up to next section header or end of file
     option_section_precise = re.compile(
         r'^\[option\].*?(?=^\[|\Z)',
         re.MULTILINE | re.DOTALL
@@ -861,18 +1163,14 @@ def patch_toml_content(raw: str, side: str, optional: bool, default_on: bool) ->
 
     if optional:
         if option_section_precise.search(raw):
-            # Replace existing [option] section
             raw = option_section_precise.sub(option_block, raw, count=1)
         else:
-            # Append at end
             if not raw.endswith('\n'):
                 raw += '\n'
             raw += '\n' + option_block
     else:
-        # Remove [option] section entirely if it exists
         if option_section_precise.search(raw):
             raw = option_section_precise.sub('', raw, count=1)
-        # Clean up any double blank lines left behind
         raw = re.sub(r'\n{3,}', '\n\n', raw)
 
     return raw
@@ -890,6 +1188,17 @@ async def github_get_file(client: httpx.AsyncClient, path: str) -> Optional[dict
 async def github_put_file(client: httpx.AsyncClient, path: str, content: str, message: str, sha: Optional[str] = None):
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
     encoded = base64.b64encode(content.encode()).decode()
+    body: dict = {"message": message, "content": encoded}
+    if sha:
+        body["sha"] = sha
+    r = await client.put(url, headers=gh_headers(), json=body)
+    r.raise_for_status()
+    return r.json()
+
+
+async def github_put_file_bytes(client: httpx.AsyncClient, path: str, content_bytes: bytes, message: str, sha: Optional[str] = None):
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    encoded = base64.b64encode(content_bytes).decode()
     body: dict = {"message": message, "content": encoded}
     if sha:
         body["sha"] = sha
@@ -1056,9 +1365,67 @@ async def search_mods(q: str = ""):
         ]
 
 
+@app.get("/api/mods/updates")
+async def check_mod_updates():
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        pw_files = await list_all_pw_files(client)
+
+        tasks = [fetch_and_parse_entry(client, e, client_only=False) for e in pw_files]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        mods = [r for r in results if isinstance(r, dict) and r.get("mod_id")]
+
+        async def check_one(mod: dict) -> dict:
+            slug = mod["slug"]
+            name = mod["name"]
+            mod_id = mod["mod_id"]
+            current_version = mod.get("version", "")
+            icon = mod.get("icon")
+            try:
+                versions = await get_modrinth_versions(client, mod_id)
+                if not versions:
+                    return {
+                        "slug": slug, "name": name, "icon": icon,
+                        "current_version": current_version,
+                        "latest_version": None, "latest_version_id": None,
+                        "has_update": False,
+                    }
+                latest = versions[0]
+                latest_id = latest.get("id", "")
+                latest_name = latest.get("name", latest_id)
+                has_update = bool(latest_id and latest_id != current_version)
+                return {
+                    "slug": slug, "name": name, "icon": icon,
+                    "current_version": current_version,
+                    "latest_version": latest_name,
+                    "latest_version_id": latest_id,
+                    "has_update": has_update,
+                }
+            except Exception:
+                return {
+                    "slug": slug, "name": name, "icon": icon,
+                    "current_version": current_version,
+                    "latest_version": None, "latest_version_id": None,
+                    "has_update": False,
+                }
+
+        # Enrich icons first
+        mods = list(await asyncio.gather(*[enrich_icon(client, m) for m in mods], return_exceptions=False))
+        mods = [m for m in mods if isinstance(m, dict)]
+
+        update_results = await asyncio.gather(*[check_one(m) for m in mods], return_exceptions=True)
+        update_results = [r for r in update_results if isinstance(r, dict)]
+        update_results = sorted(update_results, key=lambda m: m["name"].lower())
+
+    return update_results
+
+
 class AddModRequest(BaseModel):
     project_id: str
     version_id: Optional[str] = None
+    side: Optional[str] = "client"
 
 
 class PatchModRequest(BaseModel):
@@ -1067,10 +1434,19 @@ class PatchModRequest(BaseModel):
     default: bool
 
 
+class UpdateModRequest(BaseModel):
+    version_id: Optional[str] = None
+
+
 @app.post("/api/mods")
 async def add_mod(req: AddModRequest):
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    side = req.side or "client"
+    valid_sides = {"client", "server", "both"}
+    if side not in valid_sides:
+        side = "client"
 
     async with httpx.AsyncClient(timeout=30) as client:
         try:
@@ -1114,19 +1490,148 @@ async def add_mod(req: AddModRequest):
         if not sha512:
             raise HTTPException(400, "No sha512 hash found for this version file")
 
-        toml_content = build_pw_toml(name, filename, req.project_id, version_id, file_url, sha512)
+        toml_content = build_pw_toml(name, filename, req.project_id, version_id, file_url, sha512, side=side)
 
         path = f"mods/{slug}.pw.toml"
         existing = await github_get_file(client, path)
         sha = existing["sha"] if existing else None
 
-        commit_msg = f"Add client mod: {name}"
+        commit_msg = f"Add {side} mod: {name}"
         try:
             await github_put_file(client, path, toml_content, commit_msg, sha)
         except httpx.HTTPStatusError as e:
             raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
 
     return {"ok": True, "slug": slug, "name": name, "version_id": version_id}
+
+
+@app.post("/api/mods/{slug}/update")
+async def update_mod(slug: str, req: UpdateModRequest = UpdateModRequest()):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        path = f"mods/{slug}.pw.toml"
+        existing = await github_get_file(client, path)
+        if not existing:
+            raise HTTPException(404, f"Mod file not found: {path}")
+
+        sha = existing["sha"]
+        raw_b64 = existing.get("content", "")
+        try:
+            raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+        except Exception:
+            raise HTTPException(500, "Failed to decode existing file content")
+
+        data = parse_toml_simple(raw_content)
+        name = data.get("name", slug)
+        mod_id = data.get("update", {}).get("modrinth", {}).get("mod-id", "")
+        current_version_id = data.get("update", {}).get("modrinth", {}).get("version", "")
+        side = data.get("side", "client")
+
+        if not mod_id:
+            raise HTTPException(400, f"Mod '{slug}' has no Modrinth mod-id — cannot auto-update")
+
+        if req.version_id:
+            try:
+                vr = await client.get(f"{MODRINTH_API}/version/{req.version_id}")
+                vr.raise_for_status()
+                version = vr.json()
+            except httpx.HTTPStatusError:
+                raise HTTPException(400, f"Version not found: {req.version_id}")
+        else:
+            try:
+                versions = await get_modrinth_versions(client, mod_id)
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(400, f"Failed to fetch versions: {e.response.status_code}")
+            if not versions:
+                raise HTTPException(400, f"No compatible versions found for '{name}'")
+            version = versions[0]
+
+        new_version_id = version.get("id", "")
+        if new_version_id == current_version_id and not req.version_id:
+            return {"ok": True, "slug": slug, "name": name, "updated": False, "new_version_id": new_version_id}
+
+        files = version.get("files", [])
+        if not files:
+            raise HTTPException(400, "No files found in this version")
+
+        primary = next((f for f in files if f.get("primary")), files[0])
+        file_url = primary.get("url", "")
+        filename = primary.get("filename", f"{slug}.jar")
+        hashes = primary.get("hashes", {})
+        sha512 = hashes.get("sha512", "")
+
+        if not sha512:
+            raise HTTPException(400, "No sha512 hash found for this version file")
+
+        toml_content = build_pw_toml(name, filename, mod_id, new_version_id, file_url, sha512, side=side)
+
+        # Re-apply option section if present
+        option = data.get("option", {})
+        if option.get("optional"):
+            toml_content = patch_toml_content(toml_content, side, True, bool(option.get("default", False)))
+
+        commit_msg = f"Update mod: {name} -> {new_version_id}"
+        try:
+            await github_put_file(client, path, toml_content, commit_msg, sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
+
+    return {"ok": True, "slug": slug, "name": name, "updated": True, "new_version_id": new_version_id}
+
+
+@app.post("/api/mods/{slug}/upload")
+async def upload_mod_jar(slug: str, file: UploadFile = File(...)):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(400, "Uploaded file is empty")
+
+    sha512 = hashlib.sha512(content).hexdigest()
+    filename = file.filename or f"{slug}.jar"
+
+    if not filename.endswith(".jar"):
+        raise HTTPException(400, "Uploaded file must be a .jar")
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        # Upload the jar to mods/<filename> on GitHub
+        jar_path = f"mods/{filename}"
+        existing_jar = await github_get_file(client, jar_path)
+        jar_sha = existing_jar["sha"] if existing_jar else None
+
+        commit_msg = f"Upload JAR override: {filename}"
+        try:
+            await github_put_file_bytes(client, jar_path, content, commit_msg, jar_sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub jar upload failed: {e.response.text[:200]}")
+
+        # Create/update .pw.toml for this slug
+        toml_path = f"mods/{slug}.pw.toml"
+        existing_toml = await github_get_file(client, toml_path)
+        toml_sha = existing_toml["sha"] if existing_toml else None
+
+        # Get name from existing toml if available, else use slug
+        name = slug
+        if existing_toml:
+            try:
+                raw_b64 = existing_toml.get("content", "")
+                raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+                parsed = parse_toml_simple(raw_content)
+                name = parsed.get("name", slug)
+            except Exception:
+                pass
+
+        toml_content = build_pw_toml_override(name, filename, sha512, side="both")
+        toml_commit_msg = f"Update mod toml for JAR override: {name}"
+        try:
+            await github_put_file(client, toml_path, toml_content, toml_commit_msg, toml_sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub toml update failed: {e.response.text[:200]}")
+
+    return {"ok": True, "slug": slug, "name": name, "filename": filename, "sha512": sha512}
 
 
 @app.patch("/api/mods/{slug}/settings")
@@ -1151,11 +1656,9 @@ async def patch_mod_settings(slug: str, req: PatchModRequest):
         except Exception:
             raise HTTPException(500, "Failed to decode existing file content")
 
-        # Parse to get name for commit message
         data = parse_toml_simple(raw_content)
         name = data.get("name", slug)
 
-        # Patch the raw TOML content
         patched = patch_toml_content(raw_content, req.side, req.optional, req.default)
 
         commit_msg = f"Update mod settings: {name}"
@@ -1187,7 +1690,7 @@ async def remove_mod(slug: str):
         except Exception:
             name = slug
 
-        commit_msg = f"Remove client mod: {name}"
+        commit_msg = f"Remove mod: {name}"
         try:
             await github_delete_file(client, path, commit_msg, sha)
         except httpx.HTTPStatusError as e:
