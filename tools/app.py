@@ -1834,8 +1834,10 @@ async function uploadJar(slug, name, btn) {
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Upload failed');
-    toast('Uploaded JAR for: ' + name);
+    toast('JAR uploadé: ' + name + ' (' + (data.filename || '') + ')');
     fileInput.value = '';
+    allModsLoaded = false;
+    await loadAllMods();
   } catch(e) {
     toast('Upload error: ' + e.message, 'error');
   } finally {
@@ -4083,39 +4085,80 @@ async def upload_mod_jar(slug: str, file: UploadFile = File(...)):
         raise HTTPException(400, "Uploaded file must be a .jar")
 
     async with httpx.AsyncClient(timeout=60) as client:
-        # Upload the jar to mods/<filename> on GitHub
-        jar_path = f"mods/{filename}"
-        existing_jar = await github_get_file(client, jar_path)
-        jar_sha = existing_jar["sha"] if existing_jar else None
-
-        commit_msg = f"Upload JAR override: {filename}"
-        try:
-            await github_put_file_bytes(client, jar_path, content, commit_msg, jar_sha)
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(500, f"GitHub jar upload failed: {e.response.text[:200]}")
-
-        # Create/update .pw.toml for this slug
+        # Load existing .pw.toml to get old filename, name, and preserve all fields
         toml_path = f"mods/{slug}.pw.toml"
         existing_toml = await github_get_file(client, toml_path)
         toml_sha = existing_toml["sha"] if existing_toml else None
 
-        # Get name from existing toml if available, else use slug
+        old_filename = None
         name = slug
+        old_toml_raw = ""
         if existing_toml:
             try:
                 raw_b64 = existing_toml.get("content", "")
-                raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
-                parsed = parse_toml_simple(raw_content)
+                old_toml_raw = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+                parsed = parse_toml_simple(old_toml_raw)
                 name = parsed.get("name", slug)
+                old_filename = parsed.get("filename", "")
             except Exception:
                 pass
 
-        toml_content = build_pw_toml_override(name, filename, sha512, side="both")
-        toml_commit_msg = f"Update mod toml for JAR override: {name}"
+        # Delete old jar from GitHub if filename changed
+        if old_filename and old_filename != filename:
+            old_jar_entry = await github_get_file(client, f"mods/{old_filename}")
+            if old_jar_entry:
+                try:
+                    await github_delete_file(client, f"mods/{old_filename}", f"Remove old jar: {old_filename}", old_jar_entry["sha"])
+                except Exception:
+                    pass
+            # Remove old jar from /server-mods
+            if os.path.isdir(SERVER_MODS_DIR):
+                old_jar_path = os.path.join(SERVER_MODS_DIR, old_filename)
+                if os.path.exists(old_jar_path):
+                    try:
+                        os.remove(old_jar_path)
+                    except OSError:
+                        pass
+
+        # Upload new jar to GitHub mods/<filename>
+        jar_path = f"mods/{filename}"
+        existing_jar = await github_get_file(client, jar_path)
+        jar_sha = existing_jar["sha"] if existing_jar else None
         try:
-            await github_put_file(client, toml_path, toml_content, toml_commit_msg, toml_sha)
+            await github_put_file_bytes(client, jar_path, content, f"Upload JAR override: {filename}", jar_sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub jar upload failed: {e.response.text[:200]}")
+
+        # Update .pw.toml: patch filename + hash, preserve all other fields
+        if old_toml_raw:
+            # Patch filename field
+            new_toml = re.sub(r'^filename\s*=\s*"[^"]*"', f'filename = "{filename}"', old_toml_raw, flags=re.MULTILINE)
+            # Patch or add hash
+            if re.search(r'^hash\s*=', new_toml, re.MULTILINE):
+                new_toml = re.sub(r'^hash\s*=\s*"[^"]*"', f'hash = "{sha512}"', new_toml, flags=re.MULTILINE)
+            else:
+                new_toml += f'\nhash = "{sha512}"\n'
+            # Patch hash-format
+            if re.search(r'^hash-format\s*=', new_toml, re.MULTILINE):
+                new_toml = re.sub(r'^hash-format\s*=\s*"[^"]*"', 'hash-format = "sha512"', new_toml, flags=re.MULTILINE)
+            # Remove download url (local override has no remote url)
+            new_toml = re.sub(r'^url\s*=\s*"[^"]*"\n?', '', new_toml, flags=re.MULTILINE)
+        else:
+            new_toml = build_pw_toml_override(name, filename, sha512, side="both")
+
+        try:
+            await github_put_file(client, toml_path, new_toml, f"Update mod toml for JAR override: {name}", toml_sha)
         except httpx.HTTPStatusError as e:
             raise HTTPException(500, f"GitHub toml update failed: {e.response.text[:200]}")
+
+        # Copy new jar to /server-mods
+        if os.path.isdir(SERVER_MODS_DIR):
+            dest = os.path.join(SERVER_MODS_DIR, filename)
+            try:
+                with open(dest, "wb") as f:
+                    f.write(content)
+            except OSError:
+                pass
 
     return {"ok": True, "slug": slug, "name": name, "filename": filename, "sha512": sha512}
 
