@@ -2056,11 +2056,11 @@ function renderLinkResults(elId, results, source) {
           (source === 'modrinth' ? '<button class="sm ghost link-ver-btn" data-pid="' + pid + '" data-slug="' + rslug + '" title="Choisir une version">&#9660;</button>' : '') +
         '</div>' +
       '</div>' +
-      (source === 'modrinth' ? '<div class="ver-section" id="lver-sec-' + rslug + '" style="display:none;padding:0.5rem 0 0 0">' +
+      (source === 'modrinth' ? '<div class="ver-section" id="lver-sec-' + rslug + '" style="padding:0.5rem 0 0 0">' +
         '<label style="font-size:0.78rem;display:flex;align-items:center;gap:0.4rem;cursor:pointer;margin-bottom:0.4rem">' +
           '<input type="checkbox" class="lver-all-chk" data-pid="' + pid + '" data-slug="' + rslug + '"/> Toutes les versions' +
         '</label>' +
-        '<div class="ver-list" id="lver-list-' + rslug + '"><div class="loading" style="padding:0.4rem"><div class="spinner"></div></div></div>' +
+        '<div class="ver-list" id="lver-list-' + rslug + '"></div>' +
       '</div>' : '') +
     '</div>';
   }).join('');
@@ -2080,10 +2080,15 @@ function renderLinkResults(elId, results, source) {
     b.addEventListener('click', function() {
       var sec = document.getElementById('lver-sec-' + b.dataset.slug);
       if (!sec) return;
-      var open = sec.style.display !== 'none';
-      sec.style.display = open ? 'none' : '';
-      b.textContent = open ? '\u25bc' : '\u25b2';
-      if (!open) loadLinkVersions(b.dataset.pid, b.dataset.slug, false);
+      var open = sec.classList.contains('open');
+      if (open) {
+        sec.classList.remove('open');
+        b.textContent = '\u25bc';
+      } else {
+        sec.classList.add('open');
+        b.textContent = '\u25b2';
+        loadLinkVersions(b.dataset.pid, b.dataset.slug, false);
+      }
     });
   });
 
