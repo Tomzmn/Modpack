@@ -653,13 +653,18 @@ hash = "e56493279c8433b5601b7f4fc5bd2314224b6528f46cbc7d4e33c9f226ba9ccd"
 metafile = true
 
 [[files]]
+file = "mods/watermedia-binaries.pw.toml"
+hash = "03c2bc9e406cebc8c70dbdb7cb7e1592e9c41c2d8c2c57ff65f9b1e1501cf4f2"
+metafile = true
+
+[[files]]
 file = "mods/watermedia-yt-plugin.pw.toml"
 hash = "205e45d7729262d735a581940153ae8fb8f57d8f9f8c23c980bad6309b8344bb"
 metafile = true
 
 [[files]]
 file = "mods/watermedia.pw.toml"
-hash = "ead92f49287323cc9ede408a50cd7e39f4b39046f59906a810e111dfae358419"
+hash = "64b32c550d9bfa81314951cafe8008e66ab1f5d4da301294226489cc9000baaf"
 metafile = true
 
 [[files]]
