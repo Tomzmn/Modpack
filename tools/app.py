@@ -345,6 +345,15 @@ HTML = """<!DOCTYPE html>
     font-size: 0.72rem;
     font-weight: 700;
   }
+  .pinned-badge {
+    background: rgba(100,180,255,0.12);
+    border: 1px solid rgba(100,180,255,0.5);
+    color: #64b4ff;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
   .mod-version {
     font-size: 0.72rem;
     color: var(--text-muted);
@@ -1508,6 +1517,7 @@ function renderAllMods(mods) {
     var sid = m.side || 'both';
     var isOpt = !!m.optional;
     var isDef = !!m.default;
+    var isPinned = !!m.pinned;
     var isDisabled = !!m.disabled || !!m.server_disabled;
     var inPack = m.in_pack !== false;
     var slug = m.slug;
@@ -1524,6 +1534,7 @@ function renderAllMods(mods) {
             (!inPack ? '<span class="notinpack-badge">not in pack</span>' : '') +
             (isOpt ? '<span class="optional-badge">optional</span>' : '') +
             (isOpt && isDef ? '<span class="default-badge">default on</span>' : '') +
+            (isPinned ? '<span class="pinned-badge">&#128204; pinned</span>' : '') +
             (hasMod ? ' <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener" style="font-size:0.78rem">Modrinth</a>' : '') +
           '</div>' +
         '</div>' +
@@ -1532,7 +1543,7 @@ function renderAllMods(mods) {
             '<input type="checkbox" class="dis-toggle" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" ' + (!isDisabled ? 'checked' : '') + '/>' +
             '<span class="toggle-slider"></span>' +
           '</label>' +
-          (hasMod ? '<button class="ghost sm update-mod-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Update</button>' : '') +
+          (hasMod && !isPinned ? '<button class="ghost sm update-mod-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Update</button>' : '') +
           (!inPack ? '<button class="ghost sm link-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" style="color:var(--accent)">Link</button>' : '') +
           '<button class="ghost sm edit-btn" data-slug="' + escHtml(slug) + '">Edit</button>' +
           '<button class="ghost sm danger rm-all-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Remove</button>' +
@@ -1562,6 +1573,14 @@ function renderAllMods(mods) {
           '<button class="sm success-btn save-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" id="save-' + escHtml(slug) + '">Save</button>' +
           '<button class="sm ghost cancel-btn" data-slug="' + escHtml(slug) + '">Cancel</button>' +
         '</div>' +
+        (inPack && hasMod ?
+          '<div class="edit-section-title" style="margin-top:0.5rem">Version Lock</div>' +
+          '<div class="edit-panel-row">' +
+            '<span class="edit-label">Bloquer la version</span>' +
+            '<label class="toggle"><input type="checkbox" class="pin-chk" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" ' + (isPinned ? 'checked' : '') + '/><span class="toggle-slider"></span></label>' +
+            '<span class="toggle-label" id="pin-label-' + escHtml(slug) + '">' + (isPinned ? 'Oui (pas de mises &agrave; jour)' : 'Non') + '</span>' +
+          '</div>'
+        : '') +
         '<div class="edit-section-title" style="margin-top:0.5rem">Upload JAR Override</div>' +
         '<div class="edit-panel-row upload-row">' +
           '<input type="file" accept=".jar" class="jar-input" id="jar-' + escHtml(slug) + '"/>' +
@@ -1609,6 +1628,9 @@ function renderAllMods(mods) {
   });
   el.querySelectorAll('.upload-jar-btn').forEach(function(b) {
     b.addEventListener('click', function() { uploadJar(b.dataset.slug, b.dataset.name, b); });
+  });
+  el.querySelectorAll('.pin-chk').forEach(function(chk) {
+    chk.addEventListener('change', function() { togglePinMod(chk.dataset.slug, chk.dataset.name, chk.checked, chk); });
   });
   el.querySelectorAll('.update-mod-btn').forEach(function(b) {
     b.addEventListener('click', function() { updateSingleMod(b.dataset.slug, b.dataset.name, b); });
@@ -1799,6 +1821,8 @@ async function updateSingleMod(slug, name, btn) {
     if (!res.ok) throw new Error(data.detail || 'Update failed');
     if (data.updated) {
       toast('Updated ' + name + ' to ' + data.new_version_id);
+      allModsLoaded = false;
+      await loadAllMods();
     } else {
       toast(name + ' is already up to date');
     }
@@ -1806,6 +1830,30 @@ async function updateSingleMod(slug, name, btn) {
     toast('Update error: ' + e.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
+  }
+}
+
+async function togglePinMod(slug, name, pinned, chk) {
+  if (chk) chk.disabled = true;
+  var label = document.getElementById('pin-label-' + slug);
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinned: pinned })
+    });
+    var data = await safeJson(res);
+    if (!res.ok) throw new Error(data.detail || 'Pin failed');
+    toast((pinned ? 'Version bloqu\u00e9e: ' : 'Version d\u00e9bloqu\u00e9e: ') + name);
+    if (label) label.textContent = pinned ? 'Oui (pas de mises \u00e0 jour)' : 'Non';
+    // Refresh mod list to update badges
+    allModsLoaded = false;
+    await loadAllMods();
+  } catch(e) {
+    toast('Erreur: ' + e.message, 'error');
+    if (chk) chk.checked = !pinned;
+  } finally {
+    if (chk) chk.disabled = false;
   }
 }
 
@@ -2307,20 +2355,23 @@ function renderUpdates(mods) {
     return;
   }
   el.innerHTML = withUpdates.map(function(m) {
+    var curLabel = escHtml(m.current_version_name || m.current_version || 'unknown');
+    var newLabel = escHtml(m.latest_version || m.latest_version_id || '');
     return '<div class="mod-item" id="upd-' + escHtml(m.slug) + '">' +
       '<div class="mod-item-row">' +
         (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
           '<div class="mod-name">' + escHtml(m.name) + '</div>' +
           '<div class="mod-meta">' +
-            '<span class="update-version-old">' + escHtml(m.current_version || 'unknown') + '</span>' +
+            '<span class="update-version-old" title="' + escHtml(m.current_version || '') + '">' + curLabel + '</span>' +
             '<span class="update-arrow"> &#8594; </span>' +
-            '<span class="update-version-new">' + escHtml(m.latest_version_id) + '</span>' +
+            '<span class="update-version-new" title="' + escHtml(m.latest_version_id || '') + '">' + newLabel + '</span>' +
           '</div>' +
         '</div>' +
         '<div class="mod-actions">' +
           '<span class="update-badge">Update available</span>' +
           '<button class="sm success-btn upd-btn" data-slug="' + escHtml(m.slug) + '" data-name="' + escHtml(m.name) + '" data-vid="' + escHtml(m.latest_version_id) + '">Update</button>' +
+          '<button class="sm ghost upd-pin-btn" data-slug="' + escHtml(m.slug) + '" data-name="' + escHtml(m.name) + '" title="Bloquer la version actuelle (ne plus mettre \u00e0 jour)">&#128204; Bloquer</button>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -2328,6 +2379,36 @@ function renderUpdates(mods) {
   el.querySelectorAll('.upd-btn').forEach(function(b) {
     b.addEventListener('click', function() { doUpdateMod(b.dataset.slug, b.dataset.name, b.dataset.vid, b); });
   });
+  el.querySelectorAll('.upd-pin-btn').forEach(function(b) {
+    b.addEventListener('click', function() { pinFromUpdates(b.dataset.slug, b.dataset.name, b); });
+  });
+}
+
+async function pinFromUpdates(slug, name, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Bloquage...'; }
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinned: true })
+    });
+    var data = await safeJson(res);
+    if (!res.ok) throw new Error(data.detail || 'Pin failed');
+    toast('Version bloqu\u00e9e: ' + name);
+    var item = document.getElementById('upd-' + slug);
+    if (item) item.remove();
+    updatesData = updatesData.filter(function(m) { return m.slug !== slug; });
+    var remaining = updatesData.filter(function(m) { return m.has_update; });
+    document.getElementById('updatesCount').textContent = remaining.length + ' update' + (remaining.length !== 1 ? 's' : '') + ' available';
+    if (!remaining.length) {
+      document.getElementById('updatesList').innerHTML = '<div class="empty">All mods are up to date!</div>';
+      document.getElementById('updateAllBtn').style.display = 'none';
+    }
+    allModsLoaded = false;
+  } catch(e) {
+    toast('Erreur: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '&#128204; Bloquer'; }
+  }
 }
 
 async function doUpdateMod(slug, name, versionId, btn) {
@@ -2711,6 +2792,7 @@ async def fetch_and_parse_entry(client: httpx.AsyncClient, entry: dict, client_o
             "side": side,
             "optional": option.get("optional", False),
             "default": option.get("default", False),
+            "pinned": option.get("pinned", False),
             "disabled": disabled,
             "icon": None,
         }
@@ -3260,6 +3342,14 @@ async def check_mod_updates():
             mod_id = mod["mod_id"]
             current_version = mod.get("version", "")
             icon = mod.get("icon")
+            pinned = mod.get("pinned", False)
+            if pinned:
+                return {
+                    "slug": slug, "name": name, "icon": icon,
+                    "current_version": current_version,
+                    "latest_version": None, "latest_version_id": None,
+                    "has_update": False, "pinned": True,
+                }
             try:
                 versions = await get_modrinth_versions(client, mod_id)
                 if not versions:
@@ -3267,25 +3357,36 @@ async def check_mod_updates():
                         "slug": slug, "name": name, "icon": icon,
                         "current_version": current_version,
                         "latest_version": None, "latest_version_id": None,
-                        "has_update": False,
+                        "has_update": False, "pinned": False,
                     }
                 latest = versions[0]
                 latest_id = latest.get("id", "")
                 latest_name = latest.get("name", latest_id)
+                # Also get current version name from Modrinth
+                current_version_name = current_version
+                if current_version:
+                    try:
+                        cv = await client.get(f"{MODRINTH_API}/version/{current_version}")
+                        if cv.status_code == 200:
+                            current_version_name = cv.json().get("name", current_version)
+                    except Exception:
+                        pass
                 has_update = bool(latest_id and latest_id != current_version)
                 return {
                     "slug": slug, "name": name, "icon": icon,
                     "current_version": current_version,
+                    "current_version_name": current_version_name,
                     "latest_version": latest_name,
                     "latest_version_id": latest_id,
-                    "has_update": has_update,
+                    "has_update": has_update, "pinned": False,
                 }
             except Exception:
                 return {
                     "slug": slug, "name": name, "icon": icon,
                     "current_version": current_version,
+                    "current_version_name": current_version,
                     "latest_version": None, "latest_version_id": None,
-                    "has_update": False,
+                    "has_update": False, "pinned": False,
                 }
 
         # Enrich icons first
@@ -3611,6 +3712,71 @@ async def update_mod(slug: str, req: UpdateModRequest = UpdateModRequest()):
             raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
 
     return {"ok": True, "slug": slug, "name": name, "updated": True, "new_version_id": new_version_id}
+
+
+class PinModRequest(BaseModel):
+    pinned: bool
+
+
+@app.post("/api/mods/{slug}/pin")
+async def pin_mod(slug: str, req: PinModRequest):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+
+    async with httpx.AsyncClient(timeout=20) as client:
+        for candidate in [f"mods/{slug}.pw.toml", f"mods/{slug}.pw.toml.disabled"]:
+            existing = await github_get_file(client, candidate)
+            if existing:
+                path = candidate
+                break
+        else:
+            raise HTTPException(404, f"Mod not found: {slug}")
+
+        sha = existing["sha"]
+        raw_b64 = existing.get("content", "")
+        try:
+            raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+        except Exception:
+            raise HTTPException(500, "Failed to decode file content")
+
+        data = parse_toml_simple(raw_content)
+        name = data.get("name", slug)
+
+        # Patch [option] section: add/remove pinned = true
+        option_section_re = re.compile(r'^\[option\].*?(?=^\[|\Z)', re.MULTILINE | re.DOTALL)
+        existing_option = option_section_re.search(raw_content)
+
+        if req.pinned:
+            if existing_option:
+                block = existing_option.group(0)
+                if re.search(r'^pinned\s*=', block, re.MULTILINE):
+                    block = re.sub(r'^pinned\s*=.*$', 'pinned = true', block, flags=re.MULTILINE)
+                else:
+                    block = block.rstrip('\n') + '\npinned = true\n'
+                new_content = option_section_re.sub(block, raw_content, count=1)
+            else:
+                if not raw_content.endswith('\n'):
+                    raw_content += '\n'
+                new_content = raw_content + '\n[option]\npinned = true\n'
+        else:
+            if existing_option:
+                block = existing_option.group(0)
+                block = re.sub(r'^pinned\s*=.*\n?', '', block, flags=re.MULTILINE)
+                # Remove empty [option] section
+                if re.sub(r'^\[option\]\s*\n?', '', block, flags=re.MULTILINE).strip() == '':
+                    block = ''
+                new_content = option_section_re.sub(block, raw_content, count=1)
+                new_content = re.sub(r'\n{3,}', '\n\n', new_content)
+            else:
+                new_content = raw_content
+
+        action = "Pin" if req.pinned else "Unpin"
+        try:
+            await github_put_file(client, path, new_content, f"{action} mod: {name}", sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
+
+    return {"ok": True, "slug": slug, "name": name, "pinned": req.pinned}
 
 
 @app.post("/api/mods/{slug}/upload")
