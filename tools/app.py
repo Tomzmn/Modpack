@@ -337,10 +337,11 @@ HTML = """<!DOCTYPE html>
     font-weight: 700;
   }
   .mod-version {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     font-weight: 400;
     margin-left: 0.3rem;
+    word-break: break-all;
   }
   .update-badge {
     background: rgba(224,146,46,0.18);
@@ -579,6 +580,21 @@ HTML = """<!DOCTYPE html>
   .docs-flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
   .docs-flow-arrow { text-align: center; color: var(--border); font-size: 1.1rem; line-height: 1.2; }
 
+  /* Duplicate warning banner */
+  .dup-banner {
+    background: rgba(224,82,82,0.1);
+    border: 1px solid rgba(224,82,82,0.4);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .dup-banner-text { flex: 1; font-size: 0.88rem; color: var(--text); }
+  .dup-banner-text strong { color: var(--danger); }
+
   /* Sub-tabs (inside a tab panel) */
   .sub-tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
   .sub-tab-btn {
@@ -687,6 +703,7 @@ HTML = """<!DOCTYPE html>
   <!-- MODS TAB -->
   <div class="tab-panel active" id="tab-mods">
     <div class="mods-main">
+      <div id="dupBanner" style="display:none"></div>
       <div class="mods-toolbar">
         <input type="text" id="allModsFilter" placeholder="Filter by name..."/>
         <div class="filter-chips" id="filterChips">
@@ -1368,10 +1385,44 @@ async function loadAllMods() {
     var inPackCount = installedMods.length;
     document.getElementById('repoTag').textContent = inPackCount + ' mods in pack / ' + data.length + ' total';
     renderAllMods(allMods);
+    checkDuplicates();
   } catch(e) {
     document.getElementById('allModsList').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
     toast('Failed to load all mods: ' + e.message, 'error');
   }
+}
+
+async function checkDuplicates() {
+  var banner = document.getElementById('dupBanner');
+  banner.style.display = 'none';
+  try {
+    var res = await fetch('/api/mods/duplicates');
+    var data = await res.json();
+    if (!res.ok || !data.length) return;
+    var names = data.map(function(d) { return '<code>' + escHtml(d.jar) + '</code>'; }).join(', ');
+    banner.innerHTML =
+      '<div class="dup-banner">' +
+        '<div class="dup-banner-text"><strong>' + data.length + ' doublon(s) détecté(s)</strong> — jar brut présent dans le repo alors qu\'un .pw.toml existe déjà : ' + names + '</div>' +
+        '<button class="sm danger" id="cleanDupBtn">Supprimer les doublons</button>' +
+      '</div>';
+    banner.style.display = 'block';
+    document.getElementById('cleanDupBtn').addEventListener('click', function() { cleanDuplicates(data); });
+  } catch(e) { /* silent */ }
+}
+
+async function cleanDuplicates(dups) {
+  var btn = document.getElementById('cleanDupBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Nettoyage...'; }
+  var ok = 0, fail = 0;
+  for (var i = 0; i < dups.length; i++) {
+    try {
+      var res = await fetch('/api/mods/duplicates/' + encodeURIComponent(dups[i].jar), { method: 'DELETE' });
+      if (res.ok) ok++; else fail++;
+    } catch(e) { fail++; }
+  }
+  toast(ok + ' doublon(s) supprimé(s)' + (fail ? ', ' + fail + ' erreur(s)' : ''), fail ? 'error' : 'success');
+  allModsLoaded = false;
+  await loadAllMods();
 }
 
 function filterAllMods() {
@@ -1409,12 +1460,12 @@ function renderAllMods(mods) {
     var inPack = m.in_pack !== false;
     var slug = m.slug;
     var hasMod = !!m.mod_id;
-    var ver = m.version ? escHtml(m.version) : '';
+    var fname = m.filename ? escHtml(m.filename) : '';
     return '<div class="mod-item' + (isDisabled ? ' disabled-mod' : '') + '" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
       '<div class="mod-item-row">' +
         (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
         '<div class="mod-info">' +
-          '<div class="mod-name">' + escHtml(m.name) + (ver ? ' <span class="mod-version">' + ver + '</span>' : '') + '</div>' +
+          '<div class="mod-name">' + escHtml(m.name) + (fname ? ' <span class="mod-version" title="' + fname + '">' + fname + '</span>' : '') + '</div>' +
           '<div class="mod-meta">' +
             '<span class="side-badge ' + sideBadgeClass(sid) + '">' + escHtml(sid) + '</span>' +
             (isDisabled ? '<span class="disabled-badge">disabled</span>' : '') +
@@ -2944,6 +2995,65 @@ async def upload_custom_mod(
             raise HTTPException(500, f"GitHub toml upload failed: {e.response.text[:200]}")
 
     return {"ok": True, "slug": slug, "name": mod_name, "filename": filename}
+
+
+@app.get("/api/mods/duplicates")
+async def list_duplicates():
+    """Return raw jar files in GitHub mods/ that are also covered by a .pw.toml (duplicates)."""
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/mods"
+        r = await client.get(url, headers=gh_headers())
+        if r.status_code != 200:
+            return []
+        entries = r.json()
+
+        # Collect all filenames referenced in .pw.toml files
+        toml_filenames: set = set()
+        for e in entries:
+            name = e.get("name", "")
+            if name.endswith(".pw.toml") or name.endswith(".pw.toml.disabled"):
+                try:
+                    fr = await client.get(e["download_url"])
+                    if fr.status_code == 200:
+                        data = parse_toml_simple(fr.text)
+                        fname = data.get("filename", "")
+                        if fname:
+                            toml_filenames.add(fname)
+                except Exception:
+                    pass
+
+        # Find raw jars whose filename is also in a .pw.toml
+        duplicates = []
+        for e in entries:
+            name = e.get("name", "")
+            if name.lower().endswith(".jar") or name.lower().endswith(".jar.disabled"):
+                base = name.replace(".disabled", "")
+                if base in toml_filenames:
+                    duplicates.append({"jar": name, "sha": e.get("sha", ""), "path": f"mods/{name}"})
+
+    return duplicates
+
+
+@app.delete("/api/mods/duplicates/{jar_name:path}")
+async def delete_duplicate_jar(jar_name: str):
+    """Delete a raw jar from GitHub that is a duplicate of a .pw.toml entry."""
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        path = f"mods/{jar_name}"
+        existing = await github_get_file(client, path)
+        if not existing:
+            raise HTTPException(404, f"File not found: {path}")
+        try:
+            await github_delete_file(client, path, f"Remove duplicate jar: {jar_name}", existing["sha"])
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub delete failed: {e.response.text[:200]}")
+
+    return {"ok": True, "jar": jar_name}
 
 
 @app.get("/api/mods/updates")
