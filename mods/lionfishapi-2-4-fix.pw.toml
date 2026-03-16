@@ -1,0 +1,8 @@
+name = "lionfishapi-2.4-Fix"
+filename = "lionfishapi-2.4-Fix.jar"
+side = "both"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/mods/lionfishapi-2.4-Fix.jar"
+hash-format = "sha512"
+hash = "0d01df4c114ee86583d5bca12083ce49f68f19a5b3d6b78efb855eff91e6bfaf653693112b043923d064fff702bea41170710bcfdc0011dec2b223abe6a0953f"
