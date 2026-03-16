@@ -27,10 +27,15 @@ PORTAINER_TOKEN = os.environ.get("PORTAINER_TOKEN", "")
 PORTAINER_STACK_ID = os.environ.get("PORTAINER_STACK_ID", "")
 PORTAINER_ENDPOINT_ID = os.environ.get("PORTAINER_ENDPOINT_ID", "2")
 
+CURSEFORGE_TOKEN = os.environ.get("CURSEFORGE_TOKEN", "")
+
 GITHUB_API = "https://api.github.com"
 MODRINTH_API = "https://api.modrinth.com/v2"
+CURSEFORGE_API = "https://api.curseforge.com/v1"
 GAME_VERSION = "1.20.1"
 LOADER = "forge"
+CURSEFORGE_GAME_ID = 432  # Minecraft
+CURSEFORGE_LOADER_TYPE = 1  # Forge
 
 SERVER_MODS_DIR = "/server-mods"
 PACKWIZ_BINARY = "/tmp/packwiz_bin"
@@ -574,10 +579,21 @@ HTML = """<!DOCTYPE html>
   .docs-flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
   .docs-flow-arrow { text-align: center; color: var(--border); font-size: 1.1rem; line-height: 1.2; }
 
-  /* Pack tab */
-  .pack-layout { display: flex; flex-direction: column; gap: 1.5rem; }
-  .pack-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  /* Sub-tabs (inside a tab panel) */
+  .sub-tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .sub-tab-btn {
+    background: transparent; border: none; border-bottom: 2px solid transparent;
+    color: var(--text-muted); padding: 0.45rem 1rem; font-size: 0.9rem; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .sub-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .sub-tab-panel { display: none; }
+  .sub-tab-panel.active { display: block; }
+
+  /* Packwiz tab */
+  .packwiz-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   .packwiz-presets { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .pw-preset-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  .pw-preset-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
   .packwiz-output {
     background: #0a0c10;
     font-family: 'Consolas', 'Fira Code', monospace;
@@ -598,6 +614,22 @@ HTML = """<!DOCTYPE html>
   .pack-info-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.9rem; }
   .pack-info-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
   .pack-info-value { font-size: 0.95rem; font-weight: 700; margin-top: 0.15rem; word-break: break-all; }
+  /* Link modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    width: 100%; max-width: 620px; max-height: 80vh; display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header { display: flex; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); gap: 0.75rem; }
+  .modal-header h3 { flex: 1; font-size: 1rem; }
+  .modal-header .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; padding: 0 0.25rem; }
+  .modal-body { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; }
+
   /* TOML editor */
   .toml-section { display: none; margin-top: 0.5rem; }
   .toml-section.open { display: block; }
@@ -646,8 +678,8 @@ HTML = """<!DOCTYPE html>
   <div class="tabs">
     <button class="tab-btn active" id="tabbtn-mods">Mods</button>
     <button class="tab-btn" id="tabbtn-add">Add Mod</button>
+    <button class="tab-btn" id="tabbtn-packwiz">Packwiz</button>
     <button class="tab-btn" id="tabbtn-updates">Updates</button>
-    <button class="tab-btn" id="tabbtn-pack">Pack</button>
     <button class="tab-btn" id="tabbtn-server">Server</button>
     <button class="tab-btn" id="tabbtn-docs">Docs</button>
   </div>
@@ -677,48 +709,92 @@ HTML = """<!DOCTYPE html>
   <!-- ADD MOD TAB -->
   <div class="tab-panel" id="tab-add">
     <div class="panel">
-      <div class="panel-header"><h2>Add Mod via Modrinth</h2></div>
+      <div class="panel-header"><h2>Add Mod</h2></div>
       <div class="panel-body">
-        <div class="search-bar">
-          <input type="text" id="searchInput" placeholder="Search Modrinth..."/>
-          <button id="searchBtn">Search</button>
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" id="stabbtn-modrinth" onclick="switchAddTab('modrinth')">Modrinth</button>
+          <button class="sub-tab-btn" id="stabbtn-curseforge" onclick="switchAddTab('curseforge')">CurseForge</button>
+          <button class="sub-tab-btn" id="stabbtn-custom" onclick="switchAddTab('custom')">Custom</button>
         </div>
-        <div id="searchResults" class="mod-list">
-          <div class="empty">Search for mods to add.</div>
+
+        <!-- Modrinth sub-tab -->
+        <div class="sub-tab-panel active" id="stab-modrinth">
+          <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search Modrinth..."/>
+            <button id="searchBtn">Search</button>
+          </div>
+          <div id="searchResults" class="mod-list">
+            <div class="empty">Search for mods to add.</div>
+          </div>
+        </div>
+
+        <!-- CurseForge sub-tab -->
+        <div class="sub-tab-panel" id="stab-curseforge">
+          <div class="search-bar">
+            <input type="text" id="cfSearchInput" placeholder="Search CurseForge..."/>
+            <button id="cfSearchBtn">Search</button>
+          </div>
+          <div id="cfSearchResults" class="mod-list">
+            <div class="empty">Search for mods to add.</div>
+          </div>
+        </div>
+
+        <!-- Custom sub-tab -->
+        <div class="sub-tab-panel" id="stab-custom">
+          <div style="display:flex;flex-direction:column;gap:1rem;max-width:520px">
+            <div class="edit-panel-row">
+              <span class="edit-label" style="min-width:90px">Mod name</span>
+              <input type="text" id="customModName" placeholder="e.g. WorldEdit" style="flex:1"/>
+            </div>
+            <div class="edit-panel-row">
+              <span class="edit-label" style="min-width:90px">Side</span>
+              <div class="seg-group" id="customSideSeg">
+                <button class="seg-btn" data-side="client">client</button>
+                <button class="seg-btn active" data-side="both">both</button>
+                <button class="seg-btn" data-side="server">server</button>
+              </div>
+            </div>
+            <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;display:flex;flex-direction:column;gap:0.75rem">
+              <div style="font-size:0.85rem;font-weight:700;color:var(--text-muted)">Option A — Upload JAR</div>
+              <div class="edit-panel-row">
+                <input type="file" accept=".jar" id="customJarFile" style="flex:1"/>
+                <button id="customUploadBtn">Upload</button>
+              </div>
+            </div>
+            <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;display:flex;flex-direction:column;gap:0.75rem">
+              <div style="font-size:0.85rem;font-weight:700;color:var(--text-muted)">Option B — Download URL</div>
+              <div class="edit-panel-row">
+                <input type="text" id="customModUrl" placeholder="https://example.com/mod.jar" style="flex:1"/>
+                <button id="customUrlBtn">Add from URL</button>
+              </div>
+            </div>
+            <div id="customResult"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PACK TAB -->
-  <div class="tab-panel" id="tab-pack">
-    <div class="pack-layout">
-
-      <div class="pack-panel">
-        <div class="panel-header">
-          <h2>Pack Info</h2>
-          <button class="ghost sm" id="packInfoRefreshBtn" style="margin-left:auto">Refresh</button>
-        </div>
-        <div class="panel-body" id="packInfoBody">
-          <div class="loading"><div class="spinner"></div> Loading...</div>
-        </div>
-      </div>
-
-      <div class="pack-panel">
-        <div class="panel-header"><h2>Packwiz</h2></div>
-        <div class="panel-body">
+  <!-- PACKWIZ TAB -->
+  <div class="tab-panel" id="tab-packwiz">
+    <div class="packwiz-panel">
+      <div class="panel-header"><h2>Packwiz</h2></div>
+      <div class="panel-body">
+        <div class="pw-preset-group" style="margin-bottom:1rem">
+          <div class="pw-preset-label">Preconfigured commands</div>
           <div class="packwiz-presets">
             <button class="ghost sm pw-preset" data-cmd="refresh">Refresh index</button>
             <button class="ghost sm pw-preset" data-cmd="update --all">Update all</button>
+            <button class="ghost sm pw-preset" data-cmd="install">Install all</button>
+            <button class="ghost sm pw-preset" data-cmd="list">List mods</button>
           </div>
-          <div class="search-bar">
-            <input type="text" id="pwCmdInput" placeholder="e.g. modrinth add sodium -y"/>
-            <button id="pwRunBtn">Run</button>
-          </div>
-          <div class="packwiz-output" id="pwOutput"></div>
         </div>
+        <div class="search-bar">
+          <input type="text" id="pwCmdInput" placeholder="e.g. modrinth add sodium -y"/>
+          <button id="pwRunBtn">Run</button>
+        </div>
+        <div class="packwiz-output" id="pwOutput"></div>
       </div>
-
     </div>
   </div>
 
@@ -937,6 +1013,39 @@ HTML = """<!DOCTYPE html>
   </div>
 
 </div>
+
+<!-- LINK MOD MODAL -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="linkModalTitle">Link mod to Modrinth / CurseForge</h3>
+      <button class="close-btn" onclick="closeLinkModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="sub-tabs" style="margin-bottom:0.75rem">
+        <button class="sub-tab-btn active" id="lstabbtn-modrinth" onclick="switchLinkTab('modrinth')">Modrinth</button>
+        <button class="sub-tab-btn" id="lstabbtn-curseforge" onclick="switchLinkTab('curseforge')">CurseForge</button>
+      </div>
+      <!-- Modrinth -->
+      <div class="sub-tab-panel active" id="lstab-modrinth">
+        <div class="search-bar" style="margin-bottom:0.75rem">
+          <input type="text" id="linkMrInput" placeholder="Search Modrinth..."/>
+          <button id="linkMrBtn">Search</button>
+        </div>
+        <div id="linkMrResults" class="mod-list"><div class="empty">Search for the matching mod.</div></div>
+      </div>
+      <!-- CurseForge -->
+      <div class="sub-tab-panel" id="lstab-curseforge">
+        <div class="search-bar" style="margin-bottom:0.75rem">
+          <input type="text" id="linkCfInput" placeholder="Search CurseForge..."/>
+          <button id="linkCfBtn">Search</button>
+        </div>
+        <div id="linkCfResults" class="mod-list"><div class="empty">Search for the matching mod.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toasts"></div>
 <script>
 var installedSlugs = new Set();
@@ -952,14 +1061,26 @@ var serverRunning = false;
 (function() {
   document.getElementById('tabbtn-mods').addEventListener('click', function() { switchTab('mods'); });
   document.getElementById('tabbtn-add').addEventListener('click', function() { switchTab('add'); });
+  document.getElementById('tabbtn-packwiz').addEventListener('click', function() { switchTab('packwiz'); });
   document.getElementById('tabbtn-updates').addEventListener('click', function() { switchTab('updates'); });
-  document.getElementById('tabbtn-pack').addEventListener('click', function() { switchTab('pack'); });
   document.getElementById('tabbtn-server').addEventListener('click', function() { switchTab('server'); });
   document.getElementById('tabbtn-docs').addEventListener('click', function() { switchTab('docs'); });
   document.getElementById('refreshAllBtn').addEventListener('click', function() { allModsLoaded = false; loadAllMods(); });
   document.getElementById('searchBtn').addEventListener('click', function() { doSearch(); });
   document.getElementById('searchInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doSearch();
+  });
+  document.getElementById('cfSearchBtn').addEventListener('click', function() { doCFSearch(); });
+  document.getElementById('cfSearchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doCFSearch();
+  });
+  document.getElementById('customUploadBtn').addEventListener('click', function() { addCustomJar(); });
+  document.getElementById('customUrlBtn').addEventListener('click', function() { addCustomUrl(); });
+  document.getElementById('customSideSeg').querySelectorAll('.seg-btn').forEach(function(b) {
+    b.addEventListener('click', function() {
+      document.getElementById('customSideSeg').querySelectorAll('.seg-btn').forEach(function(x) { x.classList.remove('active'); });
+      b.classList.add('active');
+    });
   });
   document.getElementById('allModsFilter').addEventListener('input', function() { filterAllMods(); });
   document.querySelectorAll('#filterChips .chip').forEach(function(chip) {
@@ -984,19 +1105,23 @@ var serverRunning = false;
   loadAllMods();
 })();
 
+function switchAddTab(sub) {
+  ['modrinth', 'curseforge', 'custom'].forEach(function(s) {
+    document.getElementById('stabbtn-' + s).classList.toggle('active', s === sub);
+    document.getElementById('stab-' + s).classList.toggle('active', s === sub);
+  });
+}
+
 function switchTab(tab) {
   activeTab = tab;
-  var tabs = ['mods', 'add', 'updates', 'pack', 'server', 'docs'];
-  var btnIds = ['tabbtn-mods', 'tabbtn-add', 'tabbtn-updates', 'tabbtn-pack', 'tabbtn-server', 'tabbtn-docs'];
+  var tabs = ['mods', 'add', 'packwiz', 'updates', 'server', 'docs'];
+  var btnIds = ['tabbtn-mods', 'tabbtn-add', 'tabbtn-packwiz', 'tabbtn-updates', 'tabbtn-server', 'tabbtn-docs'];
   tabs.forEach(function(t, i) {
     document.getElementById(btnIds[i]).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   if (tab === 'mods' && !allModsLoaded) {
     loadAllMods();
-  }
-  if (tab === 'pack') {
-    loadPackInfo();
   }
   if (tab === 'server') {
     startServerTab();
@@ -1305,8 +1430,9 @@ function renderAllMods(mods) {
             '<span class="toggle-slider"></span>' +
           '</label>' +
           (hasMod ? '<button class="ghost sm update-mod-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Update</button>' : '') +
+          (!inPack ? '<button class="ghost sm link-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" style="color:var(--accent)">Link</button>' : '') +
           '<button class="ghost sm edit-btn" data-slug="' + escHtml(slug) + '">Edit</button>' +
-          (inPack ? '<button class="ghost sm danger rm-all-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Remove</button>' : '') +
+          '<button class="ghost sm danger rm-all-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Remove</button>' +
         '</div>' +
       '</div>' +
       '<div class="edit-panel" id="edit-' + escHtml(slug) + '">' +
@@ -1375,6 +1501,9 @@ function renderAllMods(mods) {
   });
   el.querySelectorAll('.rm-all-btn').forEach(function(b) {
     b.addEventListener('click', function() { removeModConfirm(b.dataset.slug, b.dataset.name, b); });
+  });
+  el.querySelectorAll('.link-btn').forEach(function(b) {
+    b.addEventListener('click', function() { openLinkModal(b.dataset.slug, b.dataset.name); });
   });
   el.querySelectorAll('.toml-toggle').forEach(function(h) {
     h.addEventListener('click', function() { toggleTomlSection(h.dataset.slug, h); });
@@ -1560,10 +1689,7 @@ async function updateSingleMod(slug, name, btn) {
   }
 }
 
-/* ===== PACK TAB ===== */
-var packInfoLoaded = false;
-
-document.getElementById('packInfoRefreshBtn').addEventListener('click', function() { packInfoLoaded = false; loadPackInfo(); });
+/* ===== PACKWIZ TAB ===== */
 document.querySelectorAll('.pw-preset').forEach(function(b) {
   b.addEventListener('click', function() { runPackwiz(b.dataset.cmd.split(' ')); });
 });
@@ -1579,25 +1705,282 @@ document.getElementById('pwCmdInput').addEventListener('keydown', function(e) {
   }
 });
 
-async function loadPackInfo() {
-  if (packInfoLoaded) return;
-  var body = document.getElementById('packInfoBody');
-  body.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+/* ===== CURSEFORGE ADD MOD ===== */
+async function doCFSearch() {
+  var q = document.getElementById('cfSearchInput').value.trim();
+  if (!q) return;
+  var btn = document.getElementById('cfSearchBtn');
+  btn.disabled = true;
+  document.getElementById('cfSearchResults').innerHTML = '<div class="loading"><div class="spinner"></div> Searching CurseForge...</div>';
   try {
-    var res = await fetch('/api/pack/info');
+    var res = await fetch('/api/search-curseforge?q=' + encodeURIComponent(q));
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Search failed');
+    renderCFSearch(data);
+  } catch(e) {
+    document.getElementById('cfSearchResults').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
+    toast('CurseForge search error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderCFSearch(results) {
+  var el = document.getElementById('cfSearchResults');
+  if (!results.length) { el.innerHTML = '<div class="empty">No results found.</div>'; return; }
+  el.innerHTML = results.map(function(r) {
+    var cfid = 'cf-' + r.project_id;
+    return '<div class="mod-item" id="sr-' + escHtml(cfid) + '">' +
+      '<div class="mod-item-row">' +
+        (r.icon ? '<img class="mod-icon" src="' + escHtml(r.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
+        '<div class="mod-info">' +
+          '<div class="mod-name">' + escHtml(r.name) + '</div>' +
+          '<div class="mod-desc">' + escHtml(r.description || '') + '</div>' +
+          '<div class="mod-meta"><span class="dl-count">' + fmtDownloads(r.downloads) + ' downloads</span></div>' +
+        '</div>' +
+        '<div class="mod-actions">' +
+          '<div class="seg-group search-side-seg" id="cfsseg-' + r.project_id + '">' +
+            '<button class="seg-btn active" data-side="client">client</button>' +
+            '<button class="seg-btn" data-side="both">both</button>' +
+            '<button class="seg-btn" data-side="server">server</button>' +
+          '</div>' +
+          '<button class="sm add-btn" data-pid="' + r.project_id + '" data-name="' + escHtml(r.name) + '" id="cfadd-' + r.project_id + '">Add</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.querySelectorAll('.search-side-seg').forEach(function(seg) {
+    seg.querySelectorAll('.seg-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        seg.querySelectorAll('.seg-btn').forEach(function(x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+  });
+  el.querySelectorAll('.add-btn').forEach(function(b) {
+    b.addEventListener('click', function() {
+      var seg = document.getElementById('cfsseg-' + b.dataset.pid);
+      var side = 'client';
+      if (seg) { var active = seg.querySelector('.seg-btn.active'); if (active) side = active.dataset.side; }
+      addCFMod(b.dataset.pid, b.dataset.name, side, b);
+    });
+  });
+}
+
+async function addCFMod(projectId, name, side, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
+  try {
+    var res = await fetch('/api/curseforge/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: parseInt(projectId), side: side })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Add failed');
+    toast('Added: ' + name);
+    allModsLoaded = false;
+    await loadAllMods();
+    if (btn) { var actions = btn.closest('.mod-actions'); if (actions) actions.innerHTML = '<span class="already-badge">Added</span>'; }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Add'; }
+  }
+}
+
+/* ===== LINK MODAL ===== */
+var linkSlug = '';
+var linkName = '';
+
+function switchLinkTab(sub) {
+  ['modrinth', 'curseforge'].forEach(function(s) {
+    document.getElementById('lstabbtn-' + s).classList.toggle('active', s === sub);
+    document.getElementById('lstab-' + s).classList.toggle('active', s === sub);
+  });
+}
+
+function openLinkModal(slug, name) {
+  linkSlug = slug;
+  linkName = name;
+  document.getElementById('linkModalTitle').textContent = 'Link "' + name + '" to Modrinth / CurseForge';
+  document.getElementById('linkMrInput').value = name;
+  document.getElementById('linkCfInput').value = name;
+  document.getElementById('linkMrResults').innerHTML = '<div class="empty">Search for the matching mod.</div>';
+  document.getElementById('linkCfResults').innerHTML = '<div class="empty">Search for the matching mod.</div>';
+  document.getElementById('linkModal').classList.add('open');
+  switchLinkTab('modrinth');
+  // Auto-search Modrinth
+  doLinkMrSearch();
+}
+
+function closeLinkModal() {
+  document.getElementById('linkModal').classList.remove('open');
+  linkSlug = '';
+  linkName = '';
+}
+
+// Close on overlay click
+document.getElementById('linkModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLinkModal();
+});
+
+document.getElementById('linkMrBtn').addEventListener('click', function() { doLinkMrSearch(); });
+document.getElementById('linkMrInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLinkMrSearch(); });
+document.getElementById('linkCfBtn').addEventListener('click', function() { doLinkCfSearch(); });
+document.getElementById('linkCfInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLinkCfSearch(); });
+
+async function doLinkMrSearch() {
+  var q = document.getElementById('linkMrInput').value.trim();
+  if (!q) return;
+  var btn = document.getElementById('linkMrBtn');
+  btn.disabled = true;
+  document.getElementById('linkMrResults').innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
+  try {
+    var res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Search failed');
+    renderLinkResults('linkMrResults', data, 'modrinth');
+  } catch(e) {
+    document.getElementById('linkMrResults').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function doLinkCfSearch() {
+  var q = document.getElementById('linkCfInput').value.trim();
+  if (!q) return;
+  var btn = document.getElementById('linkCfBtn');
+  btn.disabled = true;
+  document.getElementById('linkCfResults').innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
+  try {
+    var res = await fetch('/api/search-curseforge?q=' + encodeURIComponent(q));
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Search failed');
+    renderLinkResults('linkCfResults', data, 'curseforge');
+  } catch(e) {
+    document.getElementById('linkCfResults').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderLinkResults(elId, results, source) {
+  var el = document.getElementById(elId);
+  if (!results.length) { el.innerHTML = '<div class="empty">No results.</div>'; return; }
+  el.innerHTML = results.map(function(r) {
+    var pid = r.project_id;
+    return '<div class="mod-item" style="padding:0.6rem 0.75rem">' +
+      '<div class="mod-item-row">' +
+        (r.icon ? '<img class="mod-icon" src="' + escHtml(r.icon) + '" onerror="this.remove()" loading="lazy" style="width:36px;height:36px"/>' : '<div class="mod-icon-placeholder" style="width:36px;height:36px;font-size:1.2rem">&#x1F9E9;</div>') +
+        '<div class="mod-info">' +
+          '<div class="mod-name" style="font-size:0.9rem">' + escHtml(r.name) + '</div>' +
+          '<div class="mod-desc" style="font-size:0.78rem">' + escHtml((r.description||'').substring(0,80)) + '</div>' +
+        '</div>' +
+        '<div class="mod-actions">' +
+          '<button class="sm success-btn link-select-btn" data-pid="' + pid + '" data-name="' + escHtml(r.name) + '" data-source="' + source + '">Link</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  el.querySelectorAll('.link-select-btn').forEach(function(b) {
+    b.addEventListener('click', function() { doLink(b.dataset.pid, b.dataset.name, b.dataset.source, b); });
+  });
+}
+
+async function doLink(projectId, projName, source, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Linking...'; }
+  try {
+    var endpoint, body;
+    if (source === 'modrinth') {
+      endpoint = '/api/mods';
+      body = { project_id: projectId, side: 'both', remove_raw_jar_slug: linkSlug };
+    } else {
+      endpoint = '/api/curseforge/add';
+      body = { project_id: parseInt(projectId), side: 'both', remove_raw_jar_slug: linkSlug };
+    }
+    var res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Link failed');
+    toast('Linked ' + linkName + ' → ' + projName);
+    closeLinkModal();
+    allModsLoaded = false;
+    await loadAllMods();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Link'; }
+  }
+}
+
+/* ===== CUSTOM MOD ===== */
+function getCustomSide() {
+  var active = document.querySelector('#customSideSeg .seg-btn.active');
+  return active ? active.dataset.side : 'both';
+}
+
+async function addCustomJar() {
+  var file = document.getElementById('customJarFile').files[0];
+  var name = document.getElementById('customModName').value.trim();
+  var res2 = document.getElementById('customResult');
+  if (!file) { toast('Select a JAR file', 'error'); return; }
+  if (!name) name = file.name.replace(/\.jar$/i, '');
+  var side = getCustomSide();
+  var btn = document.getElementById('customUploadBtn');
+  btn.disabled = true; btn.textContent = 'Uploading...';
+  res2.innerHTML = '<div class="loading"><div class="spinner"></div> Uploading...</div>';
+  try {
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('name', name);
+    fd.append('side', side);
+    var res = await fetch('/api/custom/upload', { method: 'POST', body: fd });
+    var d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Upload failed');
+    toast('Added: ' + d.name);
+    allModsLoaded = false;
+    await loadAllMods();
+    res2.innerHTML = '<span style="color:var(--success)">&#10003; Added ' + escHtml(d.name) + '</span>';
+    document.getElementById('customJarFile').value = '';
+    document.getElementById('customModName').value = '';
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    res2.innerHTML = '<span style="color:var(--danger)">Error: ' + escHtml(e.message) + '</span>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Upload';
+  }
+}
+
+async function addCustomUrl() {
+  var url = document.getElementById('customModUrl').value.trim();
+  var name = document.getElementById('customModName').value.trim();
+  var res2 = document.getElementById('customResult');
+  if (!url) { toast('Enter a URL', 'error'); return; }
+  var side = getCustomSide();
+  var btn = document.getElementById('customUrlBtn');
+  btn.disabled = true; btn.textContent = 'Adding...';
+  res2.innerHTML = '<div class="loading"><div class="spinner"></div> Fetching...</div>';
+  try {
+    var res = await fetch('/api/custom/url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, name: name, side: side })
+    });
     var d = await res.json();
     if (!res.ok) throw new Error(d.detail || 'Failed');
-    packInfoLoaded = true;
-    body.innerHTML =
-      '<div class="pack-info-grid">' +
-        '<div class="pack-info-item"><div class="pack-info-label">Repo</div><div class="pack-info-value">' + escHtml(d.repo) + '</div></div>' +
-        '<div class="pack-info-item"><div class="pack-info-label">Branch</div><div class="pack-info-value">' + escHtml(d.branch) + '</div></div>' +
-        '<div class="pack-info-item"><div class="pack-info-label">.pw.toml</div><div class="pack-info-value">' + d.pw_count + '</div></div>' +
-        '<div class="pack-info-item"><div class="pack-info-label">Raw jars</div><div class="pack-info-value">' + d.jar_count + '</div></div>' +
-        '<div class="pack-info-item" style="grid-column:span 2"><div class="pack-info-label">Last commit (' + escHtml(d.last_commit_sha) + ') by ' + escHtml(d.last_commit_author) + '</div><div class="pack-info-value" style="font-size:0.82rem;font-weight:400">' + escHtml(d.last_commit_msg) + '</div></div>' +
-      '</div>';
+    toast('Added: ' + d.name);
+    allModsLoaded = false;
+    await loadAllMods();
+    res2.innerHTML = '<span style="color:var(--success)">&#10003; Added ' + escHtml(d.name) + '</span>';
+    document.getElementById('customModUrl').value = '';
+    document.getElementById('customModName').value = '';
   } catch(e) {
-    body.innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
+    toast('Error: ' + e.message, 'error');
+    res2.innerHTML = '<span style="color:var(--danger)">Error: ' + escHtml(e.message) + '</span>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add from URL';
   }
 }
 
@@ -2321,6 +2704,248 @@ async def search_mods(q: str = ""):
         ]
 
 
+def cf_headers() -> dict:
+    return {"x-api-key": CURSEFORGE_TOKEN, "Accept": "application/json"}
+
+
+@app.get("/api/search-curseforge")
+async def search_curseforge(q: str = ""):
+    if not q.strip():
+        return []
+    if not CURSEFORGE_TOKEN:
+        raise HTTPException(503, "CURSEFORGE_TOKEN not configured")
+    async with httpx.AsyncClient(timeout=15) as client:
+        try:
+            r = await client.get(
+                f"{CURSEFORGE_API}/mods/search",
+                headers=cf_headers(),
+                params={
+                    "gameId": CURSEFORGE_GAME_ID,
+                    "searchFilter": q,
+                    "modLoaderType": CURSEFORGE_LOADER_TYPE,
+                    "gameVersion": GAME_VERSION,
+                    "pageSize": 20,
+                    "classId": 6,  # Mods class
+                },
+            )
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(502, f"CurseForge API error: {e.response.status_code} {e.response.text[:100]}")
+        data = r.json()
+        hits = data.get("data", [])
+        return [
+            {
+                "project_id": h.get("id"),
+                "slug": h.get("slug", str(h.get("id"))),
+                "name": h.get("name"),
+                "description": h.get("summary", ""),
+                "icon": (h.get("logo") or {}).get("url", ""),
+                "downloads": h.get("downloadCount", 0),
+            }
+            for h in hits
+        ]
+
+
+class AddCFModRequest(BaseModel):
+    project_id: int
+    file_id: Optional[int] = None
+    side: str = "both"
+    remove_raw_jar_slug: Optional[str] = None
+
+
+@app.post("/api/curseforge/add")
+async def add_curseforge_mod(req: AddCFModRequest):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+    if not CURSEFORGE_TOKEN:
+        raise HTTPException(503, "CURSEFORGE_TOKEN not configured")
+
+    side = req.side if req.side in ("client", "server", "both") else "both"
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        # Fetch project info
+        try:
+            pr = await client.get(f"{CURSEFORGE_API}/mods/{req.project_id}", headers=cf_headers())
+            pr.raise_for_status()
+        except httpx.HTTPStatusError:
+            raise HTTPException(400, f"CurseForge project not found: {req.project_id}")
+        project = pr.json().get("data", {})
+        name = project.get("name", str(req.project_id))
+        slug = project.get("slug", str(req.project_id))
+
+        # Fetch latest compatible file
+        if req.file_id:
+            try:
+                fr = await client.get(f"{CURSEFORGE_API}/mods/{req.project_id}/files/{req.file_id}", headers=cf_headers())
+                fr.raise_for_status()
+                file_info = fr.json().get("data", {})
+            except httpx.HTTPStatusError:
+                raise HTTPException(400, f"CurseForge file not found: {req.file_id}")
+        else:
+            try:
+                fr = await client.get(
+                    f"{CURSEFORGE_API}/mods/{req.project_id}/files",
+                    headers=cf_headers(),
+                    params={"gameVersion": GAME_VERSION, "modLoaderType": CURSEFORGE_LOADER_TYPE, "pageSize": 10},
+                )
+                fr.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(400, f"Failed to fetch CurseForge files: {e.response.status_code}")
+            files = fr.json().get("data", [])
+            if not files:
+                raise HTTPException(400, f"No compatible files found for '{name}' ({GAME_VERSION} + {LOADER})")
+            file_info = files[0]
+
+        file_id = file_info.get("id")
+        filename = file_info.get("fileName", f"{slug}.jar")
+        download_url = file_info.get("downloadUrl")
+        if not download_url:
+            # Construct CDN URL from file ID
+            id_str = str(file_id)
+            download_url = f"https://edge.forgecdn.net/files/{id_str[:-3]}/{id_str[-3:]}/{filename}"
+
+        # Get SHA1 hash from hashes array (algo 1 = SHA1, algo 2 = MD5)
+        hashes = file_info.get("hashes", [])
+        sha1 = next((h["value"] for h in hashes if h.get("algo") == 1), "")
+
+        toml_content = (
+            f'name = "{name}"\n'
+            f'filename = "{filename}"\n'
+            f'side = "{side}"\n\n'
+            f'[download]\n'
+            f'url = "{download_url}"\n'
+            f'hash-format = "sha1"\n'
+            f'hash = "{sha1}"\n\n'
+            f'[update]\n'
+            f'[update.curseforge]\n'
+            f'file-id = {file_id}\n'
+            f'project-id = {req.project_id}\n'
+        )
+
+        path = f"mods/{slug}.pw.toml"
+        existing = await github_get_file(client, path)
+        sha_existing = existing["sha"] if existing else None
+        commit_msg = f"Add {side} mod (CF): {name}"
+        try:
+            await github_put_file(client, path, toml_content, commit_msg, sha_existing)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
+
+        if req.remove_raw_jar_slug:
+            jar_entry = await find_raw_jar_in_github(client, req.remove_raw_jar_slug)
+            if jar_entry:
+                try:
+                    await github_delete_file(client, f"mods/{jar_entry['name']}", f"Remove raw jar: {jar_entry['name']}", jar_entry["sha"])
+                except Exception:
+                    pass
+
+    return {"ok": True, "slug": slug, "name": name, "file_id": file_id}
+
+
+class CustomUrlRequest(BaseModel):
+    url: str
+    name: str = ""
+    side: str = "both"
+
+
+@app.post("/api/custom/url")
+async def add_custom_url(req: CustomUrlRequest):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+
+    side = req.side if req.side in ("client", "server", "both") else "both"
+    url = req.url.strip()
+    if not url.startswith("http"):
+        raise HTTPException(400, "URL must start with http/https")
+
+    async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+        try:
+            r = await client.get(url)
+            r.raise_for_status()
+        except Exception as e:
+            raise HTTPException(400, f"Failed to download from URL: {e}")
+
+        content = r.content
+        filename = url.split("/")[-1].split("?")[0] or "mod.jar"
+        name = req.name.strip() or filename.replace(".jar", "")
+        slug = re.sub(r'[^a-z0-9-]', '-', name.lower())[:40]
+        sha512 = hashlib.sha512(content).hexdigest()
+
+        toml_content = (
+            f'name = "{name}"\n'
+            f'filename = "{filename}"\n'
+            f'side = "{side}"\n\n'
+            f'[download]\n'
+            f'url = "{url}"\n'
+            f'hash-format = "sha512"\n'
+            f'hash = "{sha512}"\n'
+        )
+
+        path = f"mods/{slug}.pw.toml"
+        existing = await github_get_file(client, path)
+        sha_existing = existing["sha"] if existing else None
+        commit_msg = f"Add custom mod: {name}"
+        try:
+            await github_put_file(client, path, toml_content, commit_msg, sha_existing)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
+
+    return {"ok": True, "slug": slug, "name": name}
+
+
+@app.post("/api/custom/upload")
+async def upload_custom_mod(
+    file: UploadFile = File(...),
+    name: str = "",
+    side: str = "both",
+):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+
+    side = side if side in ("client", "server", "both") else "both"
+    filename = file.filename or "mod.jar"
+    if not filename.lower().endswith(".jar"):
+        raise HTTPException(400, "Only .jar files are supported")
+
+    content = await file.read()
+    mod_name = name.strip() or filename.replace(".jar", "")
+    slug = re.sub(r'[^a-z0-9-]', '-', mod_name.lower())[:40]
+    sha512 = hashlib.sha512(content).hexdigest()
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        # Upload the jar to GitHub
+        jar_path = f"mods/{filename}"
+        existing_jar = await github_get_file(client, jar_path)
+        jar_sha = existing_jar["sha"] if existing_jar else None
+        raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/{jar_path}"
+        commit_msg_jar = f"Add custom jar: {filename}"
+        try:
+            await github_put_file_bytes(client, jar_path, content, commit_msg_jar, jar_sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub jar upload failed: {e.response.text[:200]}")
+
+        # Create .pw.toml pointing to the raw GitHub URL
+        toml_content = (
+            f'name = "{mod_name}"\n'
+            f'filename = "{filename}"\n'
+            f'side = "{side}"\n\n'
+            f'[download]\n'
+            f'url = "{raw_url}"\n'
+            f'hash-format = "sha512"\n'
+            f'hash = "{sha512}"\n'
+        )
+        toml_path = f"mods/{slug}.pw.toml"
+        existing_toml = await github_get_file(client, toml_path)
+        toml_sha = existing_toml["sha"] if existing_toml else None
+        commit_msg_toml = f"Add custom mod: {mod_name}"
+        try:
+            await github_put_file(client, toml_path, toml_content, commit_msg_toml, toml_sha)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(500, f"GitHub toml upload failed: {e.response.text[:200]}")
+
+    return {"ok": True, "slug": slug, "name": mod_name, "filename": filename}
+
+
 @app.get("/api/mods/updates")
 async def check_mod_updates():
     if not GITHUB_PAT or not GITHUB_REPO:
@@ -2382,6 +3007,7 @@ class AddModRequest(BaseModel):
     project_id: str
     version_id: Optional[str] = None
     side: Optional[str] = "client"
+    remove_raw_jar_slug: Optional[str] = None
 
 
 class PatchModRequest(BaseModel):
@@ -2465,6 +3091,15 @@ async def add_mod(req: AddModRequest):
             await github_put_file(client, path, toml_content, commit_msg, sha)
         except httpx.HTTPStatusError as e:
             raise HTTPException(500, f"GitHub commit failed: {e.response.text[:200]}")
+
+        # Optionally remove the raw jar that this mod is replacing
+        if req.remove_raw_jar_slug:
+            jar_entry = await find_raw_jar_in_github(client, req.remove_raw_jar_slug)
+            if jar_entry:
+                try:
+                    await github_delete_file(client, f"mods/{jar_entry['name']}", f"Remove raw jar: {jar_entry['name']}", jar_entry["sha"])
+                except Exception:
+                    pass  # Non-fatal
 
     return {"ok": True, "slug": slug, "name": name, "version_id": version_id}
 
@@ -2722,31 +3357,82 @@ async def patch_mod_settings(slug: str, req: PatchModRequest):
     return {"ok": True, "slug": slug, "name": name}
 
 
+def slugify_jar(jar_name: str) -> str:
+    """Derive a slug from a jar filename (same logic as list_all_mods)."""
+    base = re.sub(r'\.(jar\.disabled|jar)$', '', jar_name, flags=re.IGNORECASE).lower()
+    return re.sub(r'[^a-z0-9-]', '-', base)[:40]
+
+
+async def find_raw_jar_in_github(client: httpx.AsyncClient, slug: str) -> Optional[dict]:
+    """Search GitHub mods/ directory for a raw .jar file matching the given slug."""
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/mods"
+    r = await client.get(url, headers=gh_headers())
+    if r.status_code != 200:
+        return None
+    entries = r.json()
+    for e in entries:
+        name = e.get("name", "")
+        if name.lower().endswith(".jar") or name.lower().endswith(".jar.disabled"):
+            if slugify_jar(name) == slug:
+                return e
+    return None
+
+
 @app.delete("/api/mods/{slug}")
 async def remove_mod(slug: str):
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
 
     async with httpx.AsyncClient(timeout=20) as client:
-        path = f"mods/{slug}.pw.toml"
-        existing = await github_get_file(client, path)
-        if not existing:
-            raise HTTPException(404, f"Mod file not found: {path}")
+        # Try .pw.toml first (and .pw.toml.disabled)
+        path = None
+        existing = None
+        for candidate in [f"mods/{slug}.pw.toml", f"mods/{slug}.pw.toml.disabled"]:
+            existing = await github_get_file(client, candidate)
+            if existing:
+                path = candidate
+                break
 
-        sha = existing["sha"]
-        raw_b64 = existing.get("content", "")
-        try:
-            raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
-            data = parse_toml_simple(raw_content)
-            name = data.get("name", slug)
-        except Exception:
-            name = slug
+        if existing and path:
+            # Standard packwiz mod removal
+            sha = existing["sha"]
+            raw_b64 = existing.get("content", "")
+            try:
+                raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+                data = parse_toml_simple(raw_content)
+                name = data.get("name", slug)
+            except Exception:
+                name = slug
 
-        commit_msg = f"Remove mod: {name}"
-        try:
-            await github_delete_file(client, path, commit_msg, sha)
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(500, f"GitHub delete failed: {e.response.text[:200]}")
+            commit_msg = f"Remove mod: {name}"
+            try:
+                await github_delete_file(client, path, commit_msg, sha)
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(500, f"GitHub delete failed: {e.response.text[:200]}")
+        else:
+            # Try raw jar in GitHub repo
+            jar_entry = await find_raw_jar_in_github(client, slug)
+            if jar_entry:
+                name = re.sub(r'\.(jar\.disabled|jar)$', '', jar_entry["name"], flags=re.IGNORECASE)
+                try:
+                    await github_delete_file(client, f"mods/{jar_entry['name']}", f"Remove mod: {name}", jar_entry["sha"])
+                except httpx.HTTPStatusError as e:
+                    raise HTTPException(500, f"GitHub delete failed: {e.response.text[:200]}")
+            else:
+                name = slug
+
+        # Also delete physical file from /server-mods if present
+        for suffix in [".jar", ".jar.disabled"]:
+            # Try to match by slug
+            server_dir = "/server-mods"
+            if os.path.isdir(server_dir):
+                for fname in os.listdir(server_dir):
+                    if slugify_jar(fname) == slug:
+                        try:
+                            os.remove(os.path.join(server_dir, fname))
+                        except OSError:
+                            pass
+                        break
 
     return {"ok": True, "slug": slug, "name": name}
 
