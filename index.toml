@@ -648,6 +648,21 @@ file = "mods/twilightforest-1.20.1-4.3.2508-universal.jar"
 hash = "0bdc89263616d1b35c32ef82c5e9c14cbd20368e2fe8b468c72a28320be7a778"
 
 [[files]]
+file = "mods/watermedia-yt-plugin.pw.toml"
+hash = "205e45d7729262d735a581940153ae8fb8f57d8f9f8c23c980bad6309b8344bb"
+metafile = true
+
+[[files]]
+file = "mods/watermedia.pw.toml"
+hash = "08c110acee384c48dd882d56cef85ea186bcc419ef5b7af9d184f512704af0fd"
+metafile = true
+
+[[files]]
+file = "mods/watervision.pw.toml"
+hash = "3e94877a9b48b2156de7f348232beb84729d3e230c7cf267f6e381ef9f8bf8df"
+metafile = true
+
+[[files]]
 file = "mods/waystones.pw.toml"
 hash = "ff646e2f218fe9b5094b835855949b70f3f528f0d12ce2401455f60ee9017dbb"
 metafile = true
