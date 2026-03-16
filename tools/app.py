@@ -1420,7 +1420,7 @@ async function checkDuplicates() {
     var names = data.map(function(d) { return '<code>' + escHtml(d.jar) + '</code>'; }).join(', ');
     banner.innerHTML =
       '<div class="dup-banner">' +
-        '<div class="dup-banner-text"><strong>' + data.length + ' doublon(s) détecté(s)</strong> — jar brut présent dans le repo alors qu\'un .pw.toml existe déjà : ' + names + '</div>' +
+        '<div class="dup-banner-text"><strong>' + data.length + ' doublon(s)</strong> &#8212; jar brut dans le repo alors qu&#39;un .pw.toml existe : ' + names + '</div>' +
         '<button class="sm danger" id="cleanDupBtn">Supprimer les doublons</button>' +
       '</div>';
     banner.style.display = 'block';
