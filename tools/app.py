@@ -2896,14 +2896,26 @@ async def github_delete_file(client: httpx.AsyncClient, path: str, message: str,
     return r.json()
 
 
+async def modrinth_get(client: httpx.AsyncClient, url: str, **kwargs) -> httpx.Response:
+    """GET a Modrinth URL with automatic retry on 429."""
+    for attempt in range(4):
+        r = await client.get(url, **kwargs)
+        if r.status_code != 429:
+            return r
+        retry_after = int(r.headers.get("X-Ratelimit-Reset", r.headers.get("Retry-After", 2 ** attempt)))
+        await asyncio.sleep(min(retry_after, 30))
+    return r
+
+
 async def get_modrinth_project(client: httpx.AsyncClient, project_id: str) -> dict:
-    r = await client.get(f"{MODRINTH_API}/project/{project_id}")
+    r = await modrinth_get(client, f"{MODRINTH_API}/project/{project_id}")
     r.raise_for_status()
     return r.json()
 
 
 async def get_modrinth_versions(client: httpx.AsyncClient, project_id: str) -> list:
-    r = await client.get(
+    r = await modrinth_get(
+        client,
         f"{MODRINTH_API}/project/{project_id}/version",
         params={
             "game_versions": f'["{GAME_VERSION}"]',
@@ -3161,7 +3173,7 @@ async def list_project_versions(project_id: str, all: int = 0):
             params["game_versions"] = f'["{GAME_VERSION}"]'
             params["loaders"] = f'["{LOADER}"]'
         try:
-            r = await client.get(f"{MODRINTH_API}/project/{project_id}/version", params=params)
+            r = await modrinth_get(client, f"{MODRINTH_API}/project/{project_id}/version", params=params)
             r.raise_for_status()
         except httpx.HTTPStatusError as e:
             raise HTTPException(502, f"Modrinth API error: {e.response.status_code}")
@@ -3541,7 +3553,7 @@ async def check_mod_updates():
                 current_version_name = current_version
                 if current_version:
                     try:
-                        cv = await client.get(f"{MODRINTH_API}/version/{current_version}")
+                        cv = await modrinth_get(client, f"{MODRINTH_API}/version/{current_version}")
                         if cv.status_code == 200:
                             current_version_name = cv.json().get("name", current_version)
                     except Exception:
@@ -3622,7 +3634,7 @@ async def add_mod(req: AddModRequest):
 
         if req.version_id:
             try:
-                vr = await client.get(f"{MODRINTH_API}/version/{req.version_id}")
+                vr = await modrinth_get(client, f"{MODRINTH_API}/version/{req.version_id}")
                 vr.raise_for_status()
                 version = vr.json()
             except httpx.HTTPStatusError:
@@ -3884,7 +3896,7 @@ async def list_mod_versions(slug: str, all: int = 0):
             params["loaders"] = f'["{LOADER}"]'
 
         try:
-            r = await client.get(f"{MODRINTH_API}/project/{mod_id}/version", params=params)
+            r = await modrinth_get(client, f"{MODRINTH_API}/project/{mod_id}/version", params=params)
             r.raise_for_status()
         except httpx.HTTPStatusError as e:
             raise HTTPException(502, f"Modrinth API error: {e.response.status_code}")
@@ -3936,7 +3948,7 @@ async def update_mod(slug: str, req: UpdateModRequest = UpdateModRequest()):
 
         if req.version_id:
             try:
-                vr = await client.get(f"{MODRINTH_API}/version/{req.version_id}")
+                vr = await modrinth_get(client, f"{MODRINTH_API}/version/{req.version_id}")
                 vr.raise_for_status()
                 version = vr.json()
             except httpx.HTTPStatusError:
