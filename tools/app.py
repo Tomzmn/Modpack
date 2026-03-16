@@ -2036,49 +2036,138 @@ function renderLinkResults(elId, results, source) {
   var el = document.getElementById(elId);
   if (!results.length) { el.innerHTML = '<div class="empty">No results.</div>'; return; }
   el.innerHTML = results.map(function(r) {
-    var pid = r.project_id;
-    return '<div class="mod-item" style="padding:0.6rem 0.75rem">' +
+    var pid = escHtml(r.project_id);
+    var rslug = escHtml(r.slug || r.project_id);
+    var src = escHtml(source);
+    return '<div class="mod-item" style="padding:0.6rem 0.75rem" id="lres-' + rslug + '">' +
       '<div class="mod-item-row">' +
         (r.icon ? '<img class="mod-icon" src="' + escHtml(r.icon) + '" onerror="this.remove()" loading="lazy" style="width:36px;height:36px"/>' : '<div class="mod-icon-placeholder" style="width:36px;height:36px;font-size:1.2rem">&#x1F9E9;</div>') +
-        '<div class="mod-info">' +
+        '<div class="mod-info" style="flex:1">' +
           '<div class="mod-name" style="font-size:0.9rem">' + escHtml(r.name) + '</div>' +
-          '<div class="mod-desc" style="font-size:0.78rem">' + escHtml((r.description||'').substring(0,80)) + '</div>' +
+          '<div class="mod-desc" style="font-size:0.78rem;color:var(--text-muted)">' + escHtml((r.description||'').substring(0,100)) + '</div>' +
         '</div>' +
-        '<div class="mod-actions">' +
-          '<button class="sm success-btn link-select-btn" data-pid="' + pid + '" data-name="' + escHtml(r.name) + '" data-source="' + source + '">Link</button>' +
+        '<div class="mod-actions" style="gap:0.4rem">' +
+          '<div class="seg-group" id="lside-' + rslug + '" style="scale:0.85">' +
+            '<button class="seg-btn" data-side="client">client</button>' +
+            '<button class="seg-btn active" data-side="both">both</button>' +
+            '<button class="seg-btn" data-side="server">server</button>' +
+          '</div>' +
+          '<button class="sm success-btn link-select-btn" data-pid="' + pid + '" data-slug="' + rslug + '" data-name="' + escHtml(r.name) + '" data-source="' + src + '">Link</button>' +
+          (source === 'modrinth' ? '<button class="sm ghost link-ver-btn" data-pid="' + pid + '" data-slug="' + rslug + '" title="Choisir une version">&#9660;</button>' : '') +
         '</div>' +
       '</div>' +
+      (source === 'modrinth' ? '<div class="ver-section" id="lver-sec-' + rslug + '" style="display:none;padding:0.5rem 0 0 0">' +
+        '<label style="font-size:0.78rem;display:flex;align-items:center;gap:0.4rem;cursor:pointer;margin-bottom:0.4rem">' +
+          '<input type="checkbox" class="lver-all-chk" data-pid="' + pid + '" data-slug="' + rslug + '"/> Toutes les versions' +
+        '</label>' +
+        '<div class="ver-list" id="lver-list-' + rslug + '"><div class="loading" style="padding:0.4rem"><div class="spinner"></div></div></div>' +
+      '</div>' : '') +
     '</div>';
   }).join('');
+
+  // Side seg buttons
+  el.querySelectorAll('.seg-group').forEach(function(grp) {
+    grp.querySelectorAll('.seg-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        grp.querySelectorAll('.seg-btn').forEach(function(x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+  });
+
+  // Version picker toggle
+  el.querySelectorAll('.link-ver-btn').forEach(function(b) {
+    b.addEventListener('click', function() {
+      var sec = document.getElementById('lver-sec-' + b.dataset.slug);
+      if (!sec) return;
+      var open = sec.style.display !== 'none';
+      sec.style.display = open ? 'none' : '';
+      b.textContent = open ? '\u25bc' : '\u25b2';
+      if (!open) loadLinkVersions(b.dataset.pid, b.dataset.slug, false);
+    });
+  });
+
+  // "All versions" checkbox
+  el.querySelectorAll('.lver-all-chk').forEach(function(chk) {
+    chk.addEventListener('change', function() {
+      loadLinkVersions(chk.dataset.pid, chk.dataset.slug, chk.checked);
+    });
+  });
+
+  // Link button (latest version)
   el.querySelectorAll('.link-select-btn').forEach(function(b) {
-    b.addEventListener('click', function() { doLink(b.dataset.pid, b.dataset.name, b.dataset.source, b); });
+    b.addEventListener('click', function() {
+      var side = getLinkSide(b.dataset.slug);
+      doLink(b.dataset.pid, b.dataset.name, b.dataset.source, null, side, b);
+    });
   });
 }
 
-async function doLink(projectId, projName, source, btn) {
+function getLinkSide(slug) {
+  var grp = document.getElementById('lside-' + slug);
+  if (!grp) return 'both';
+  var active = grp.querySelector('.seg-btn.active');
+  return active ? active.dataset.side : 'both';
+}
+
+async function loadLinkVersions(pid, slug, all) {
+  var el = document.getElementById('lver-list-' + slug);
+  if (!el) return;
+  el.innerHTML = '<div class="loading" style="padding:0.4rem"><div class="spinner"></div></div>';
+  try {
+    var res = await fetch('/api/versions/' + encodeURIComponent(pid) + (all ? '?all=1' : ''));
+    var data = await safeJson(res);
+    if (!res.ok) throw new Error(data.detail || 'Failed');
+    if (!data.length) { el.innerHTML = '<div class="empty" style="font-size:0.8rem">Aucune version compatible.</div>'; return; }
+    el.innerHTML = data.map(function(v) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border)">' +
+        '<span style="font-size:0.82rem">' + escHtml(v.name) + ' <span style="color:var(--text-muted);font-size:0.75rem">(' + escHtml(v.id) + ')</span></span>' +
+        '<button class="sm success-btn lver-pick-btn" data-pid="' + escHtml(pid) + '" data-slug="' + escHtml(slug) + '" data-vid="' + escHtml(v.id) + '" data-vname="' + escHtml(v.name) + '" style="padding:0.15rem 0.5rem;font-size:0.78rem">Link</button>' +
+      '</div>';
+    }).join('');
+    el.querySelectorAll('.lver-pick-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        var side = getLinkSide(b.dataset.slug);
+        // Find mod name from parent result item
+        var item = document.getElementById('lres-' + b.dataset.slug);
+        var nameEl = item ? item.querySelector('.mod-name') : null;
+        var mname = nameEl ? nameEl.textContent : b.dataset.slug;
+        doLink(b.dataset.pid, mname, 'modrinth', b.dataset.vid, side, b);
+      });
+    });
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--danger);font-size:0.8rem">Erreur: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+async function doLink(projectId, projName, source, versionId, side, btn) {
+  side = side || 'both';
   if (btn) { btn.disabled = true; btn.textContent = 'Linking...'; }
+  var slug = linkSlug;
   try {
     var endpoint, body;
     if (source === 'modrinth') {
       endpoint = '/api/mods';
-      body = { project_id: projectId, side: 'both', remove_raw_jar_slug: linkSlug };
+      body = { project_id: projectId, side: side, remove_raw_jar_slug: slug };
+      if (versionId) body.version_id = versionId;
     } else {
       endpoint = '/api/curseforge/add';
-      body = { project_id: parseInt(projectId), side: 'both', remove_raw_jar_slug: linkSlug };
+      body = { project_id: parseInt(projectId), side: side, remove_raw_jar_slug: slug };
+      if (versionId) body.file_id = parseInt(versionId);
     }
     var res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    var d = await res.json();
+    var d = await safeJson(res);
     if (!res.ok) throw new Error(d.detail || 'Link failed');
-    toast('Linked ' + linkName + ' → ' + projName);
+    toast('Associ\u00e9: ' + linkName + ' \u2192 ' + projName);
     closeLinkModal();
     allModsLoaded = false;
     await loadAllMods();
   } catch(e) {
-    toast('Error: ' + e.message, 'error');
+    toast('Erreur: ' + e.message, 'error');
     if (btn) { btn.disabled = false; btn.textContent = 'Link'; }
   }
 }
@@ -3497,6 +3586,15 @@ async def add_mod(req: AddModRequest):
                     await github_delete_file(client, f"mods/{jar_entry['name']}", f"Remove raw jar: {jar_entry['name']}", jar_entry["sha"])
                 except Exception:
                     pass  # Non-fatal
+            # Also remove from /server-mods
+            if os.path.isdir(SERVER_MODS_DIR):
+                for fname in os.listdir(SERVER_MODS_DIR):
+                    if slugify_jar(fname) == req.remove_raw_jar_slug:
+                        try:
+                            os.remove(os.path.join(SERVER_MODS_DIR, fname))
+                        except OSError:
+                            pass
+                        break
 
     return {"ok": True, "slug": slug, "name": name, "version_id": version_id}
 
