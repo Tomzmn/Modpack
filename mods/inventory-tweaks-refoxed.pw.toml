@@ -1,7 +1,0 @@
-name = "Inventory Tweaks: ReFoxed"
-filename = "invtweaks-1.20.1-1.2.2.jar"
-side = "both"
-
-[download]
-hash-format = "sha512"
-hash = "8a3802b080a900f111d205f6ada25c05c86ea8069f0befe83ec5b428a42b1eac76eda81df26750c78a68a4971a539892025c6ec213c6371993f379b7b0fdcaeb"
