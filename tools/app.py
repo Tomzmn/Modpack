@@ -646,6 +646,24 @@ HTML = """<!DOCTYPE html>
   .modal-header .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; padding: 0 0.25rem; }
   .modal-body { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; }
 
+  /* Version picker */
+  .ver-section { display: none; margin-top: 0.5rem; }
+  .ver-section.open { display: block; }
+  .ver-toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+  .ver-list { display: flex; flex-direction: column; gap: 0.3rem; max-height: 260px; overflow-y: auto; }
+  .ver-item {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.65rem;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .ver-item:hover { border-color: var(--accent); }
+  .ver-item.current { border-color: var(--success); }
+  .ver-name { font-size: 0.85rem; font-weight: 600; flex: 1; }
+  .ver-file { font-size: 0.72rem; color: var(--text-muted); word-break: break-all; }
+  .ver-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .ver-tag { font-size: 0.68rem; padding: 0.1rem 0.4rem; border-radius: 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); }
+  .ver-apply { font-size: 0.75rem; padding: 0.2rem 0.55rem; }
+
   /* TOML editor */
   .toml-section { display: none; margin-top: 0.5rem; }
   .toml-section.open { display: block; }
@@ -1515,6 +1533,17 @@ function renderAllMods(mods) {
           '<input type="file" accept=".jar" class="jar-input" id="jar-' + escHtml(slug) + '"/>' +
           '<button class="sm warning-btn upload-jar-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Upload JAR</button>' +
         '</div>' +
+        (inPack && hasMod ?
+          '<div class="edit-section-title ver-toggle" data-slug="' + escHtml(slug) + '" data-modid="' + escHtml(m.mod_id) + '" data-curver="' + escHtml(m.version||'') + '" style="margin-top:0.5rem">&#9658; Changer la version</div>' +
+          '<div class="ver-section" id="ver-sec-' + escHtml(slug) + '">' +
+            '<div class="ver-toolbar">' +
+              '<label style="font-size:0.8rem;display:flex;align-items:center;gap:0.4rem;cursor:pointer">' +
+                '<input type="checkbox" class="ver-all-chk" data-slug="' + escHtml(slug) + '" data-modid="' + escHtml(m.mod_id) + '" data-curver="' + escHtml(m.version||'') + '"/> Toutes les versions' +
+              '</label>' +
+            '</div>' +
+            '<div class="ver-list" id="ver-list-' + escHtml(slug) + '"><div class="loading" style="padding:0.5rem"><div class="spinner"></div> Chargement...</div></div>' +
+          '</div>'
+        : '') +
         (inPack ?
           '<div class="edit-section-title toml-toggle" data-slug="' + escHtml(slug) + '" style="margin-top:0.5rem">&#9658; Edit Raw .pw.toml</div>' +
           '<div class="toml-section" id="toml-sec-' + escHtml(slug) + '">' +
@@ -1555,6 +1584,12 @@ function renderAllMods(mods) {
   });
   el.querySelectorAll('.link-btn').forEach(function(b) {
     b.addEventListener('click', function() { openLinkModal(b.dataset.slug, b.dataset.name); });
+  });
+  el.querySelectorAll('.ver-toggle').forEach(function(h) {
+    h.addEventListener('click', function() { toggleVerSection(h.dataset.slug, h.dataset.modid, h.dataset.curver, h, false); });
+  });
+  el.querySelectorAll('.ver-all-chk').forEach(function(chk) {
+    chk.addEventListener('change', function() { loadVersions(chk.dataset.slug, chk.dataset.modid, chk.dataset.curver, chk.checked); });
   });
   el.querySelectorAll('.toml-toggle').forEach(function(h) {
     h.addEventListener('click', function() { toggleTomlSection(h.dataset.slug, h); });
@@ -2062,6 +2097,91 @@ async function runPackwiz(args) {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run';
+  }
+}
+
+/* ===== VERSION PICKER ===== */
+var verLoaded = {};
+
+function toggleVerSection(slug, modId, curVer, header, allVersions) {
+  var sec = document.getElementById('ver-sec-' + slug);
+  if (!sec) return;
+  var isOpen = sec.classList.contains('open');
+  if (isOpen) {
+    sec.classList.remove('open');
+    header.innerHTML = '&#9658; Changer la version';
+    return;
+  }
+  sec.classList.add('open');
+  header.innerHTML = '&#9660; Changer la version';
+  if (!verLoaded[slug]) {
+    loadVersions(slug, modId, curVer, false);
+  }
+}
+
+async function loadVersions(slug, modId, curVer, all) {
+  var el = document.getElementById('ver-list-' + slug);
+  if (!el) return;
+  el.innerHTML = '<div class="loading" style="padding:0.5rem"><div class="spinner"></div> Chargement...</div>';
+  verLoaded[slug] = false;
+  try {
+    var url = '/api/mods/' + encodeURIComponent(slug) + '/versions' + (all ? '?all=1' : '');
+    var res = await fetch(url);
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed');
+    verLoaded[slug] = true;
+    renderVersions(el, slug, curVer, data);
+  } catch(e) {
+    el.innerHTML = '<div class="empty" style="padding:0.5rem">Erreur: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+function renderVersions(el, slug, curVer, versions) {
+  if (!versions.length) { el.innerHTML = '<div class="empty" style="padding:0.5rem">Aucune version trouvée.</div>'; return; }
+  el.innerHTML = versions.map(function(v) {
+    var isCur = v.id === curVer;
+    var tags = (v.game_versions || []).concat(v.loaders || []).map(function(t) {
+      return '<span class="ver-tag">' + escHtml(t) + '</span>';
+    }).join('');
+    var date = v.date_published ? v.date_published.substring(0, 10) : '';
+    return '<div class="ver-item' + (isCur ? ' current' : '') + '" data-vid="' + escHtml(v.id) + '">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="display:flex;align-items:baseline;gap:0.5rem">' +
+          '<span class="ver-name">' + escHtml(v.name) + '</span>' +
+          (isCur ? '<span style="font-size:0.7rem;color:var(--success)">&#10003; actuel</span>' : '') +
+          (date ? '<span style="font-size:0.7rem;color:var(--text-muted)">' + date + '</span>' : '') +
+        '</div>' +
+        (v.filename ? '<div class="ver-file">' + escHtml(v.filename) + '</div>' : '') +
+        (tags ? '<div class="ver-tags" style="margin-top:0.25rem">' + tags + '</div>' : '') +
+      '</div>' +
+      (!isCur ? '<button class="ghost sm ver-apply" data-slug="' + escHtml(slug) + '" data-vid="' + escHtml(v.id) + '" data-vname="' + escHtml(v.name) + '">Appliquer</button>' : '') +
+    '</div>';
+  }).join('');
+  el.querySelectorAll('.ver-apply').forEach(function(b) {
+    b.addEventListener('click', function(e) {
+      e.stopPropagation();
+      applyVersion(b.dataset.slug, b.dataset.vid, b.dataset.vname, b);
+    });
+  });
+}
+
+async function applyVersion(slug, versionId, vname, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Applique...'; }
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ version_id: versionId })
+    });
+    var d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Échec');
+    toast('Version appliquée : ' + vname);
+    verLoaded[slug] = false;
+    allModsLoaded = false;
+    await loadAllMods();
+  } catch(e) {
+    toast('Erreur: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Appliquer'; }
   }
 }
 
@@ -3300,6 +3420,55 @@ async def toggle_disable_mod(slug: str):
 
         else:
             raise HTTPException(404, f"Mod file not found: {slug}")
+
+
+@app.get("/api/mods/{slug}/versions")
+async def list_mod_versions(slug: str, all: int = 0):
+    """List available Modrinth versions for a mod. all=1 returns all versions, else only 1.20.1+Forge."""
+    async with httpx.AsyncClient(timeout=20) as client:
+        # Resolve mod-id from .pw.toml
+        mod_id = None
+        for candidate in [f"mods/{slug}.pw.toml", f"mods/{slug}.pw.toml.disabled"]:
+            existing = await github_get_file(client, candidate)
+            if existing:
+                raw_b64 = existing.get("content", "")
+                try:
+                    raw = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+                    data = parse_toml_simple(raw)
+                    mod_id = data.get("update", {}).get("modrinth", {}).get("mod-id", "")
+                except Exception:
+                    pass
+                break
+
+        if not mod_id:
+            raise HTTPException(400, f"Mod '{slug}' has no Modrinth mod-id")
+
+        params: dict = {}
+        if not all:
+            params["game_versions"] = f'["{GAME_VERSION}"]'
+            params["loaders"] = f'["{LOADER}"]'
+
+        try:
+            r = await client.get(f"{MODRINTH_API}/project/{mod_id}/version", params=params)
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(502, f"Modrinth API error: {e.response.status_code}")
+
+        versions = r.json()
+        result = []
+        for v in versions:
+            files = v.get("files", [])
+            primary = next((f for f in files if f.get("primary")), files[0] if files else {})
+            result.append({
+                "id": v.get("id"),
+                "name": v.get("name", v.get("version_number", "")),
+                "version_number": v.get("version_number", ""),
+                "game_versions": v.get("game_versions", []),
+                "loaders": v.get("loaders", []),
+                "date_published": v.get("date_published", ""),
+                "filename": primary.get("filename", ""),
+            })
+        return result
 
 
 @app.post("/api/mods/{slug}/update")
