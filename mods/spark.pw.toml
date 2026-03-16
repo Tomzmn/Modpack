@@ -1,6 +1,6 @@
 name = "spark"
 filename = "spark-1.10.53-forge.jar"
-side = "both"
+side = "server"
 
 [download]
 url = "https://cdn.modrinth.com/data/l6YH9Als/versions/4FXHDE9F/spark-1.10.53-forge.jar"
