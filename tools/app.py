@@ -645,6 +645,7 @@ HTML = """<!DOCTYPE html>
 <div class="container">
   <div class="tabs">
     <button class="tab-btn active" id="tabbtn-mods">Mods</button>
+    <button class="tab-btn" id="tabbtn-add">Add Mod</button>
     <button class="tab-btn" id="tabbtn-updates">Updates</button>
     <button class="tab-btn" id="tabbtn-pack">Pack</button>
     <button class="tab-btn" id="tabbtn-server">Server</button>
@@ -653,39 +654,37 @@ HTML = """<!DOCTYPE html>
 
   <!-- MODS TAB -->
   <div class="tab-panel active" id="tab-mods">
-    <div class="mods-layout">
-      <div class="mods-main">
-        <div class="mods-toolbar">
-          <input type="text" id="allModsFilter" placeholder="Filter by name..."/>
-          <div class="filter-chips" id="filterChips">
-            <button class="chip active" data-filter="all">All</button>
-            <button class="chip" data-filter="client">Client</button>
-            <button class="chip" data-filter="server">Server</button>
-            <button class="chip" data-filter="both">Both</button>
-            <button class="chip" data-filter="notinpack">Not in pack</button>
-            <button class="chip" data-filter="disabled">Disabled</button>
-          </div>
-          <span class="filter-count" id="allModsCount"></span>
-          <button class="ghost sm" id="refreshAllBtn">Refresh</button>
+    <div class="mods-main">
+      <div class="mods-toolbar">
+        <input type="text" id="allModsFilter" placeholder="Filter by name..."/>
+        <div class="filter-chips" id="filterChips">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="client">Client</button>
+          <button class="chip" data-filter="server">Server</button>
+          <button class="chip" data-filter="both">Both</button>
+          <button class="chip" data-filter="notinpack">Not in pack</button>
+          <button class="chip" data-filter="disabled">Disabled</button>
         </div>
-        <div id="allModsList" class="mod-list">
-          <div class="loading"><div class="spinner"></div> Loading...</div>
-        </div>
+        <span class="filter-count" id="allModsCount"></span>
+        <button class="ghost sm" id="refreshAllBtn">Refresh</button>
       </div>
-      <div class="mods-side">
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Add Mod</h2>
-          </div>
-          <div class="panel-body">
-            <div class="search-bar">
-              <input type="text" id="searchInput" placeholder="Search Modrinth..."/>
-              <button id="searchBtn">Search</button>
-            </div>
-            <div id="searchResults" class="mod-list">
-              <div class="empty">Search for mods to add.</div>
-            </div>
-          </div>
+      <div id="allModsList" class="mod-list">
+        <div class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD MOD TAB -->
+  <div class="tab-panel" id="tab-add">
+    <div class="panel">
+      <div class="panel-header"><h2>Add Mod via Modrinth</h2></div>
+      <div class="panel-body">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search Modrinth..."/>
+          <button id="searchBtn">Search</button>
+        </div>
+        <div id="searchResults" class="mod-list">
+          <div class="empty">Search for mods to add.</div>
         </div>
       </div>
     </div>
@@ -952,6 +951,7 @@ var serverRunning = false;
 
 (function() {
   document.getElementById('tabbtn-mods').addEventListener('click', function() { switchTab('mods'); });
+  document.getElementById('tabbtn-add').addEventListener('click', function() { switchTab('add'); });
   document.getElementById('tabbtn-updates').addEventListener('click', function() { switchTab('updates'); });
   document.getElementById('tabbtn-pack').addEventListener('click', function() { switchTab('pack'); });
   document.getElementById('tabbtn-server').addEventListener('click', function() { switchTab('server'); });
@@ -986,8 +986,8 @@ var serverRunning = false;
 
 function switchTab(tab) {
   activeTab = tab;
-  var tabs = ['mods', 'updates', 'pack', 'server', 'docs'];
-  var btnIds = ['tabbtn-mods', 'tabbtn-updates', 'tabbtn-pack', 'tabbtn-server', 'tabbtn-docs'];
+  var tabs = ['mods', 'add', 'updates', 'pack', 'server', 'docs'];
+  var btnIds = ['tabbtn-mods', 'tabbtn-add', 'tabbtn-updates', 'tabbtn-pack', 'tabbtn-server', 'tabbtn-docs'];
   tabs.forEach(function(t, i) {
     document.getElementById(btnIds[i]).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
@@ -1413,8 +1413,24 @@ async function toggleDisableMod(slug, name, chk) {
     var modItem = document.getElementById('allmod-' + slug);
     if (modItem) {
       modItem.classList.toggle('disabled-mod', nowDisabled);
+      // Update toggle title
+      var lbl = chk.closest('label');
+      if (lbl) lbl.title = nowDisabled ? 'Enable mod' : 'Disable mod';
+      // Update disabled badge in meta
+      var meta = modItem.querySelector('.mod-meta');
+      if (meta) {
+        var badge = meta.querySelector('.disabled-badge');
+        if (nowDisabled && !badge) {
+          var nb = document.createElement('span');
+          nb.className = 'disabled-badge';
+          nb.textContent = 'disabled';
+          meta.insertBefore(nb, meta.children[1] || null);
+        } else if (!nowDisabled && badge) {
+          badge.remove();
+        }
+      }
       var entry = allMods.find(function(m) { return m.slug === slug; });
-      if (entry) entry.disabled = nowDisabled;
+      if (entry) { entry.disabled = nowDisabled; entry.server_disabled = nowDisabled; }
     }
   } catch(e) {
     toast('Error: ' + e.message, 'error');
@@ -2799,7 +2815,7 @@ async def server_command(req: ServerCommandRequest):
     url = f"{CRAFTY_URL}/api/v2/servers/{CRAFTY_SERVER_ID}/stdin"
     async with httpx.AsyncClient(timeout=10, verify=False) as client:
         try:
-            r = await client.post(url, headers=crafty_headers(), json={"command": req.command})
+            r = await client.post(url, headers=crafty_headers(), json={"data": req.command})
             r.raise_for_status()
         except httpx.HTTPStatusError as e:
             raise HTTPException(502, f"Crafty API error: {e.response.status_code}")
