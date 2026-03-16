@@ -1193,49 +1193,6 @@ function escHtml(s) {
     .replace(/'/g,'&#39;');
 }
 
-/* ===== CLIENT MODS ===== */
-async function loadMods() {
-  document.getElementById('modList').innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
-  try {
-    var res = await fetch('/api/mods');
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Failed to load mods');
-    installedMods = data;
-    installedSlugs = new Set(data.map(function(m) { return m.slug; }));
-    document.getElementById('modCount').textContent = data.length;
-    document.getElementById('repoTag').textContent = data.length + ' client mods in pack';
-    renderMods(data);
-    refreshSearchBadges();
-  } catch(e) {
-    document.getElementById('modList').innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
-    toast('Failed to load mods: ' + e.message, 'error');
-  }
-}
-
-function renderMods(mods) {
-  var el = document.getElementById('modList');
-  if (!mods.length) { el.innerHTML = '<div class="empty">No client mods installed yet.</div>'; return; }
-  el.innerHTML = mods.map(function(m) {
-    return '<div class="mod-item" id="mod-' + escHtml(m.slug) + '" data-name="' + escHtml(m.name) + '">' +
-      '<div class="mod-item-row">' +
-        (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
-        '<div class="mod-info">' +
-          '<div class="mod-name">' + escHtml(m.name) + '</div>' +
-          '<div class="mod-meta">' +
-            (m.version ? escHtml(m.version) : '') +
-            (m.mod_id ? ' &middot; <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener">Modrinth</a>' : '') +
-          '</div>' +
-        '</div>' +
-        '<div class="mod-actions">' +
-          '<button class="sm danger rm-btn" data-slug="' + escHtml(m.slug) + '" data-name="' + escHtml(m.name) + '" id="rm-' + escHtml(m.slug) + '">Remove</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-  el.querySelectorAll('.rm-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() { removeMod(btn.dataset.slug, btn.dataset.name, btn); });
-  });
-}
 
 async function removeMod(slug, name, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
@@ -2497,7 +2454,7 @@ async function triggerSync() {
 }
 
 // Initial load
-loadMods();
+loadAllMods();
 </script>
 </body>
 </html>
