@@ -314,9 +314,8 @@ hash = "42a94664fb026e7fb517bf0f3134cf04a2bb6f9695e7e9613f9edf71cb86999a"
 metafile = true
 
 [[files]]
-file = "mods/inventory-tweaks-refoxed.pw.toml"
-hash = "8afdabc2edf17a0eed4de3a8e25df147c82d1775cddb02cf7f47c0c0f59797e0"
-metafile = true
+file = "mods/invtweaks-1.20.1-1.2.2.jar"
+hash = "54ba6fd7d5e4b9a9dadf6876153b99a94b4997f8d4ee0e46c9c58ea5c8c95802"
 
 [[files]]
 file = "mods/iron-furnaces.pw.toml"
@@ -343,6 +342,11 @@ hash = "0fbcc8cf03336e6bed425e2115fc4ff1a3a05be5c655228b305e70380eb08b57"
 metafile = true
 
 [[files]]
+file = "mods/jei.pw.toml"
+hash = "b0441c2b5bb6ff680d97eac28d95847f0d4dbee34d1d42d897997b500acd44ca"
+metafile = true
+
+[[files]]
 file = "mods/journeymap.pw.toml"
 hash = "b29b617692233d60179a6d7376dade85063af0e73a3cc53c623bf570fb768d82"
 metafile = true
@@ -363,8 +367,8 @@ hash = "9e8dd3e6c43542e5edc72259a9be1d3815b87cc3baca9ea071b39c3f06dbb1fc"
 metafile = true
 
 [[files]]
-file = "mods/lionfish-api.pw.toml"
-hash = "3e055c411c197b2103e338dc9fdcd37272df81aaf4246f801694f97feaf7d232"
+file = "mods/lionfishapi-2-4-fix.pw.toml"
+hash = "f636970ad675f4632d33fbbb1b14d638d84f737809d270ef045e60880c26c2a4"
 metafile = true
 
 [[files]]
@@ -472,8 +476,18 @@ hash = "f83b253ca6a8e6f2f847952704da0e1fb00e65cbb10b7c9cb15d1a1780618da0"
 metafile = true
 
 [[files]]
+file = "mods/oh-the-biomes-weve-gone.pw.toml"
+hash = "b9f5ac1a8860f16476fd7a2be8a7ea08e7a12be79539c6bbe2435dbac5e668c4"
+metafile = true
+
+[[files]]
 file = "mods/oh-the-trees-youll-grow.pw.toml"
 hash = "5b97d8644a71fb70757b616a1a7c8ab0245fc9a46f7928bf59f428263eb08c6e"
+metafile = true
+
+[[files]]
+file = "mods/ore-excavation.pw.toml"
+hash = "c6465b957a78be227bf3af4f131c8413c563f418d8c32ef21b13097792d49c0d"
 metafile = true
 
 [[files]]
@@ -484,6 +498,11 @@ metafile = true
 [[files]]
 file = "mods/playeranimator.pw.toml"
 hash = "765987a78e5d8c782d0da2de99998b43b5907d6c41347d3804045ad109e4a586"
+metafile = true
+
+[[files]]
+file = "mods/proxy-compatible-forge.pw.toml"
+hash = "cf66e8b250b2120766cd964e14c03a3b1e4ba2c791153aa41e1c6aef220fba51"
 metafile = true
 
 [[files]]
@@ -629,13 +648,18 @@ file = "mods/twilightforest-1.20.1-4.3.2508-universal.jar"
 hash = "0bdc89263616d1b35c32ef82c5e9c14cbd20368e2fe8b468c72a28320be7a778"
 
 [[files]]
+file = "mods/waterframes.pw.toml"
+hash = "e56493279c8433b5601b7f4fc5bd2314224b6528f46cbc7d4e33c9f226ba9ccd"
+metafile = true
+
+[[files]]
 file = "mods/watermedia-yt-plugin.pw.toml"
-hash = "9fa9b86f4975f5995519f284c519482d7aa69f2e3cbc2be208dc43c46998bed6"
+hash = "205e45d7729262d735a581940153ae8fb8f57d8f9f8c23c980bad6309b8344bb"
 metafile = true
 
 [[files]]
 file = "mods/watermedia.pw.toml"
-hash = "64b32c550d9bfa81314951cafe8008e66ab1f5d4da301294226489cc9000baaf"
+hash = "ead92f49287323cc9ede408a50cd7e39f4b39046f59906a810e111dfae358419"
 metafile = true
 
 [[files]]
@@ -734,4 +758,4 @@ metafile = true
 
 [[files]]
 file = "tools/app.py"
-hash = "8f0d39509e8af178bf9d5a84a2a03c50fab3caae0c1f5a9e8c7c489842766887"
+hash = "d86c71369310e1c406c9be7d2769399053c472cb388af6ea5b48733e53a28a9b"
