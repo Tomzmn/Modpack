@@ -42,7 +42,16 @@ PACKWIZ_BINARY = "/tmp/packwiz_bin"
 PACKWIZ_REPO = "/tmp/modpack_repo"
 packwiz_lock = asyncio.Lock()
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
 app = FastAPI()
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
+
 
 HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -1194,11 +1203,15 @@ function escHtml(s) {
 }
 
 
+async function safeJson(res) {
+  try { return await res.json(); } catch(e) { return { detail: await res.text().catch(function(){return 'Server error';}) }; }
+}
+
 async function removeMod(slug, name, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
   try {
     var res = await fetch('/api/mods/' + encodeURIComponent(slug), { method: 'DELETE' });
-    var data = await res.json();
+    var data = await safeJson(res);
     if (!res.ok) throw new Error(data.detail || 'Remove failed');
     toast('Removed: ' + name);
     allModsLoaded = false;
@@ -1216,7 +1229,7 @@ function removeModConfirm(slug, name, btn) {
     btn.textContent = 'Removing...';
     btn.disabled = true;
     fetch('/api/mods/' + encodeURIComponent(slug), { method: 'DELETE' })
-      .then(function(res) { return res.json().then(function(d) { return {ok: res.ok, d: d}; }); })
+      .then(function(res) { return safeJson(res).then(function(d) { return {ok: res.ok, d: d}; }); })
       .then(function(r) {
         if (!r.ok) throw new Error(r.d.detail || 'Remove failed');
         toast('Removed: ' + name);
@@ -1263,6 +1276,13 @@ async function doSearch() {
   }
 }
 
+function getSearchSide(slug) {
+  var seg = document.getElementById('sseg-' + slug);
+  if (!seg) return 'client';
+  var active = seg.querySelector('.seg-btn.active');
+  return active ? active.dataset.side : 'client';
+}
+
 function renderSearch(results) {
   var el = document.getElementById('searchResults');
   if (!results.length) { el.innerHTML = '<div class="empty">No results found.</div>'; return; }
@@ -1284,10 +1304,19 @@ function renderSearch(results) {
                 '<button class="seg-btn" data-side="both">both</button>' +
                 '<button class="seg-btn" data-side="server">server</button>' +
               '</div>' +
+              '<button class="ghost sm ver-pick-btn" data-pid="' + escHtml(r.project_id) + '" data-slug="' + escHtml(r.slug) + '" title="Choisir une version">&#9660;</button>' +
               '<button class="sm add-btn" data-pid="' + escHtml(r.project_id) + '" data-slug="' + escHtml(r.slug) + '" data-name="' + escHtml(r.name) + '" id="add-' + escHtml(r.slug) + '">Add</button>'
           ) +
         '</div>' +
       '</div>' +
+      (!already ? '<div class="ver-section" id="srpick-' + escHtml(r.slug) + '" style="padding:0 0.75rem 0.5rem">' +
+        '<div class="ver-toolbar">' +
+          '<label style="font-size:0.8rem;display:flex;align-items:center;gap:0.4rem;cursor:pointer">' +
+            '<input type="checkbox" class="srver-all-chk" data-pid="' + escHtml(r.project_id) + '" data-slug="' + escHtml(r.slug) + '"/> Toutes les versions' +
+          '</label>' +
+        '</div>' +
+        '<div class="ver-list" id="srpick-list-' + escHtml(r.slug) + '"></div>' +
+      '</div>' : '') +
     '</div>';
   }).join('');
   el.querySelectorAll('.search-side-seg').forEach(function(seg) {
@@ -1300,15 +1329,61 @@ function renderSearch(results) {
   });
   el.querySelectorAll('.add-btn').forEach(function(b) {
     b.addEventListener('click', function() {
-      var seg = document.getElementById('sseg-' + b.dataset.slug);
-      var side = 'client';
-      if (seg) {
-        var active = seg.querySelector('.seg-btn.active');
-        if (active) side = active.dataset.side;
-      }
-      addMod(b.dataset.pid, b.dataset.slug, b.dataset.name, side);
+      addMod(b.dataset.pid, b.dataset.slug, b.dataset.name, getSearchSide(b.dataset.slug));
     });
   });
+  el.querySelectorAll('.ver-pick-btn').forEach(function(b) {
+    b.addEventListener('click', function() { toggleSearchVerPicker(b.dataset.slug, b.dataset.pid, b); });
+  });
+  el.querySelectorAll('.srver-all-chk').forEach(function(chk) {
+    chk.addEventListener('change', function() { loadSearchVersions(chk.dataset.slug, chk.dataset.pid, chk.checked); });
+  });
+}
+
+var srVerLoaded = {};
+
+function toggleSearchVerPicker(slug, pid, btn) {
+  var sec = document.getElementById('srpick-' + slug);
+  if (!sec) return;
+  var open = sec.classList.contains('open');
+  sec.classList.toggle('open', !open);
+  btn.textContent = open ? '&#9660;' : '&#9650;';
+  btn.innerHTML = open ? '&#9660;' : '&#9650;';
+  if (!open && !srVerLoaded[slug]) loadSearchVersions(slug, pid, false);
+}
+
+async function loadSearchVersions(slug, pid, all) {
+  var el = document.getElementById('srpick-list-' + slug);
+  if (!el) return;
+  el.innerHTML = '<div class="loading" style="padding:0.5rem"><div class="spinner"></div></div>';
+  srVerLoaded[slug] = false;
+  try {
+    var res = await fetch('/api/versions/' + encodeURIComponent(pid) + (all ? '?all=1' : ''));
+    var data = await safeJson(res);
+    if (!res.ok) throw new Error(data.detail || 'Failed');
+    srVerLoaded[slug] = true;
+    if (!data.length) { el.innerHTML = '<div class="empty" style="padding:0.5rem">Aucune version compatible.</div>'; return; }
+    el.innerHTML = data.map(function(v) {
+      var date = v.date_published ? v.date_published.substring(0, 10) : '';
+      return '<div class="ver-item" data-vid="' + escHtml(v.id) + '">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="display:flex;align-items:baseline;gap:0.5rem">' +
+            '<span class="ver-name">' + escHtml(v.name) + '</span>' +
+            (date ? '<span style="font-size:0.7rem;color:var(--text-muted)">' + date + '</span>' : '') +
+          '</div>' +
+          (v.filename ? '<div class="ver-file">' + escHtml(v.filename) + '</div>' : '') +
+        '</div>' +
+        '<button class="ghost sm ver-apply srver-add-btn" data-slug="' + escHtml(slug) + '" data-pid="' + escHtml(pid) + '" data-vid="' + escHtml(v.id) + '" data-vname="' + escHtml(v.name) + '">Add</button>' +
+      '</div>';
+    }).join('');
+    el.querySelectorAll('.srver-add-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        addMod(b.dataset.pid, b.dataset.slug, b.dataset.vname, getSearchSide(b.dataset.slug), b.dataset.vid);
+      });
+    });
+  } catch(e) {
+    el.innerHTML = '<div class="empty" style="padding:0.5rem">Erreur: ' + escHtml(e.message) + '</div>';
+  }
 }
 
 function refreshSearchBadges() {
@@ -1321,15 +1396,17 @@ function refreshSearchBadges() {
   });
 }
 
-async function addMod(projectId, slug, name, side) {
+async function addMod(projectId, slug, name, side, versionId) {
   side = side || 'client';
   var btn = document.getElementById('add-' + slug);
   if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
   try {
+    var body = { project_id: projectId, side: side };
+    if (versionId) body.version_id = versionId;
     var res = await fetch('/api/mods', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id: projectId, side: side })
+      body: JSON.stringify(body)
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Add failed');
@@ -2836,6 +2913,36 @@ def cf_headers() -> dict:
     return {"x-api-key": CURSEFORGE_TOKEN, "Accept": "application/json"}
 
 
+@app.get("/api/versions/{project_id}")
+async def list_project_versions(project_id: str, all: int = 0):
+    """List Modrinth versions for a project_id (for the Add Mod picker)."""
+    async with httpx.AsyncClient(timeout=20) as client:
+        params: dict = {}
+        if not all:
+            params["game_versions"] = f'["{GAME_VERSION}"]'
+            params["loaders"] = f'["{LOADER}"]'
+        try:
+            r = await client.get(f"{MODRINTH_API}/project/{project_id}/version", params=params)
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(502, f"Modrinth API error: {e.response.status_code}")
+        versions = r.json()
+        result = []
+        for v in versions:
+            files = v.get("files", [])
+            primary = next((f for f in files if f.get("primary")), files[0] if files else {})
+            result.append({
+                "id": v.get("id"),
+                "name": v.get("name", v.get("version_number", "")),
+                "version_number": v.get("version_number", ""),
+                "game_versions": v.get("game_versions", []),
+                "loaders": v.get("loaders", []),
+                "date_published": v.get("date_published", ""),
+                "filename": primary.get("filename", ""),
+            })
+        return result
+
+
 @app.get("/api/search-curseforge")
 async def search_curseforge(q: str = ""):
     if not q.strip():
@@ -3658,19 +3765,20 @@ async def remove_mod(slug: str):
                 name = slug
 
         # Also delete physical file from /server-mods if present
-        for suffix in [".jar", ".jar.disabled"]:
-            # Try to match by slug
-            server_dir = "/server-mods"
-            if os.path.isdir(server_dir):
-                for fname in os.listdir(server_dir):
-                    if slugify_jar(fname) == slug:
-                        try:
-                            os.remove(os.path.join(server_dir, fname))
-                        except OSError:
-                            pass
-                        break
+        server_dir = "/server-mods"
+        if os.path.isdir(server_dir):
+            for fname in os.listdir(server_dir):
+                if slugify_jar(fname) == slug:
+                    try:
+                        os.remove(os.path.join(server_dir, fname))
+                    except OSError:
+                        pass
+                    break
 
     return {"ok": True, "slug": slug, "name": name}
+
+
+
 
 
 # ===== SERVER (CRAFTY) ENDPOINTS =====
