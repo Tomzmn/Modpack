@@ -4,6 +4,10 @@ import base64
 import tomllib
 import asyncio
 import hashlib
+import shutil
+import subprocess
+import zipfile
+import io
 from typing import Optional
 import httpx
 from fastapi import FastAPI, HTTPException, File, UploadFile
@@ -29,6 +33,9 @@ GAME_VERSION = "1.20.1"
 LOADER = "forge"
 
 SERVER_MODS_DIR = "/server-mods"
+PACKWIZ_BINARY = "/tmp/packwiz_bin"
+PACKWIZ_REPO = "/tmp/modpack_repo"
+packwiz_lock = asyncio.Lock()
 
 app = FastAPI()
 
@@ -567,6 +574,51 @@ HTML = """<!DOCTYPE html>
   .docs-flow-num { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
   .docs-flow-arrow { text-align: center; color: var(--border); font-size: 1.1rem; line-height: 1.2; }
 
+  /* Pack tab */
+  .pack-layout { display: flex; flex-direction: column; gap: 1.5rem; }
+  .pack-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .packwiz-presets { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .packwiz-output {
+    background: #0a0c10;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 0.82rem;
+    color: #c8d0e0;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-top: 0.75rem;
+    min-height: 80px;
+    max-height: 340px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: none;
+  }
+  .packwiz-output.visible { display: block; }
+  .pack-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .pack-info-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.9rem; }
+  .pack-info-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pack-info-value { font-size: 0.95rem; font-weight: 700; margin-top: 0.15rem; word-break: break-all; }
+  /* TOML editor */
+  .toml-section { display: none; margin-top: 0.5rem; }
+  .toml-section.open { display: block; }
+  .toml-editor {
+    width: 100%;
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: #c8d0e0;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 0.82rem;
+    padding: 0.75rem;
+    min-height: 200px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.5;
+  }
+  .toml-editor:focus { border-color: var(--accent); }
+  .toml-toggle { cursor: pointer; user-select: none; }
+  .toml-toggle:hover { color: var(--accent); }
+
   /* Mods tab layout */
   .mods-layout { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; align-items: start; }
   @media (max-width: 1100px) { .mods-layout { grid-template-columns: 1fr; } }
@@ -594,6 +646,7 @@ HTML = """<!DOCTYPE html>
   <div class="tabs">
     <button class="tab-btn active" id="tabbtn-mods">Mods</button>
     <button class="tab-btn" id="tabbtn-updates">Updates</button>
+    <button class="tab-btn" id="tabbtn-pack">Pack</button>
     <button class="tab-btn" id="tabbtn-server">Server</button>
     <button class="tab-btn" id="tabbtn-docs">Docs</button>
   </div>
@@ -635,6 +688,38 @@ HTML = """<!DOCTYPE html>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- PACK TAB -->
+  <div class="tab-panel" id="tab-pack">
+    <div class="pack-layout">
+
+      <div class="pack-panel">
+        <div class="panel-header">
+          <h2>Pack Info</h2>
+          <button class="ghost sm" id="packInfoRefreshBtn" style="margin-left:auto">Refresh</button>
+        </div>
+        <div class="panel-body" id="packInfoBody">
+          <div class="loading"><div class="spinner"></div> Loading...</div>
+        </div>
+      </div>
+
+      <div class="pack-panel">
+        <div class="panel-header"><h2>Packwiz</h2></div>
+        <div class="panel-body">
+          <div class="packwiz-presets">
+            <button class="ghost sm pw-preset" data-cmd="refresh">Refresh index</button>
+            <button class="ghost sm pw-preset" data-cmd="update --all">Update all</button>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="pwCmdInput" placeholder="e.g. modrinth add sodium -y"/>
+            <button id="pwRunBtn">Run</button>
+          </div>
+          <div class="packwiz-output" id="pwOutput"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -868,6 +953,7 @@ var serverRunning = false;
 (function() {
   document.getElementById('tabbtn-mods').addEventListener('click', function() { switchTab('mods'); });
   document.getElementById('tabbtn-updates').addEventListener('click', function() { switchTab('updates'); });
+  document.getElementById('tabbtn-pack').addEventListener('click', function() { switchTab('pack'); });
   document.getElementById('tabbtn-server').addEventListener('click', function() { switchTab('server'); });
   document.getElementById('tabbtn-docs').addEventListener('click', function() { switchTab('docs'); });
   document.getElementById('refreshAllBtn').addEventListener('click', function() { allModsLoaded = false; loadAllMods(); });
@@ -900,14 +986,17 @@ var serverRunning = false;
 
 function switchTab(tab) {
   activeTab = tab;
-  var tabs = ['mods', 'updates', 'server', 'docs'];
-  var btnIds = ['tabbtn-mods', 'tabbtn-updates', 'tabbtn-server', 'tabbtn-docs'];
+  var tabs = ['mods', 'updates', 'pack', 'server', 'docs'];
+  var btnIds = ['tabbtn-mods', 'tabbtn-updates', 'tabbtn-pack', 'tabbtn-server', 'tabbtn-docs'];
   tabs.forEach(function(t, i) {
     document.getElementById(btnIds[i]).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   if (tab === 'mods' && !allModsLoaded) {
     loadAllMods();
+  }
+  if (tab === 'pack') {
+    loadPackInfo();
   }
   if (tab === 'server') {
     startServerTab();
@@ -1249,6 +1338,16 @@ function renderAllMods(mods) {
           '<input type="file" accept=".jar" class="jar-input" id="jar-' + escHtml(slug) + '"/>' +
           '<button class="sm warning-btn upload-jar-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Upload JAR</button>' +
         '</div>' +
+        (inPack ?
+          '<div class="edit-section-title toml-toggle" data-slug="' + escHtml(slug) + '" style="margin-top:0.5rem">&#9658; Edit Raw .pw.toml</div>' +
+          '<div class="toml-section" id="toml-sec-' + escHtml(slug) + '">' +
+            '<textarea class="toml-editor" id="toml-txt-' + escHtml(slug) + '" spellcheck="false">Loading...</textarea>' +
+            '<div class="edit-actions" style="margin-top:0.5rem">' +
+              '<button class="sm success-btn toml-save-btn" data-slug="' + escHtml(slug) + '">Save TOML</button>' +
+              '<button class="sm ghost toml-cancel-btn" data-slug="' + escHtml(slug) + '">Cancel</button>' +
+            '</div>' +
+          '</div>'
+        : '') +
       '</div>' +
     '</div>';
   }).join('');
@@ -1276,6 +1375,18 @@ function renderAllMods(mods) {
   });
   el.querySelectorAll('.rm-all-btn').forEach(function(b) {
     b.addEventListener('click', function() { removeModConfirm(b.dataset.slug, b.dataset.name, b); });
+  });
+  el.querySelectorAll('.toml-toggle').forEach(function(h) {
+    h.addEventListener('click', function() { toggleTomlSection(h.dataset.slug, h); });
+  });
+  el.querySelectorAll('.toml-save-btn').forEach(function(b) {
+    b.addEventListener('click', function() { saveModToml(b.dataset.slug, b); });
+  });
+  el.querySelectorAll('.toml-cancel-btn').forEach(function(b) {
+    b.addEventListener('click', function() {
+      var sec = document.getElementById('toml-sec-' + b.dataset.slug);
+      if (sec) sec.classList.remove('open');
+    });
   });
   el.querySelectorAll('.dis-toggle').forEach(function(chk) {
     chk.addEventListener('change', function() { toggleDisableMod(chk.dataset.slug, chk.dataset.name, chk); });
@@ -1430,6 +1541,130 @@ async function updateSingleMod(slug, name, btn) {
     toast('Update error: ' + e.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
+  }
+}
+
+/* ===== PACK TAB ===== */
+var packInfoLoaded = false;
+
+document.getElementById('packInfoRefreshBtn').addEventListener('click', function() { packInfoLoaded = false; loadPackInfo(); });
+document.querySelectorAll('.pw-preset').forEach(function(b) {
+  b.addEventListener('click', function() { runPackwiz(b.dataset.cmd.split(' ')); });
+});
+document.getElementById('pwRunBtn').addEventListener('click', function() {
+  var cmd = document.getElementById('pwCmdInput').value.trim();
+  if (!cmd) return;
+  runPackwiz(cmd.split(/\s+/));
+});
+document.getElementById('pwCmdInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var cmd = document.getElementById('pwCmdInput').value.trim();
+    if (cmd) runPackwiz(cmd.split(/\s+/));
+  }
+});
+
+async function loadPackInfo() {
+  if (packInfoLoaded) return;
+  var body = document.getElementById('packInfoBody');
+  body.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+  try {
+    var res = await fetch('/api/pack/info');
+    var d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Failed');
+    packInfoLoaded = true;
+    body.innerHTML =
+      '<div class="pack-info-grid">' +
+        '<div class="pack-info-item"><div class="pack-info-label">Repo</div><div class="pack-info-value">' + escHtml(d.repo) + '</div></div>' +
+        '<div class="pack-info-item"><div class="pack-info-label">Branch</div><div class="pack-info-value">' + escHtml(d.branch) + '</div></div>' +
+        '<div class="pack-info-item"><div class="pack-info-label">.pw.toml</div><div class="pack-info-value">' + d.pw_count + '</div></div>' +
+        '<div class="pack-info-item"><div class="pack-info-label">Raw jars</div><div class="pack-info-value">' + d.jar_count + '</div></div>' +
+        '<div class="pack-info-item" style="grid-column:span 2"><div class="pack-info-label">Last commit (' + escHtml(d.last_commit_sha) + ') by ' + escHtml(d.last_commit_author) + '</div><div class="pack-info-value" style="font-size:0.82rem;font-weight:400">' + escHtml(d.last_commit_msg) + '</div></div>' +
+      '</div>';
+  } catch(e) {
+    body.innerHTML = '<div class="empty">Error: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+async function runPackwiz(args) {
+  var btn = document.getElementById('pwRunBtn');
+  var out = document.getElementById('pwOutput');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  out.textContent = '$ packwiz ' + args.join(' ') + '\\n';
+  out.classList.add('visible');
+  try {
+    var res = await fetch('/api/packwiz/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ args: args })
+    });
+    var d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Failed');
+    out.textContent += d.output || '(no output)';
+    if (d.committed) { out.textContent += '\\nCommitted and pushed.'; packInfoLoaded = false; }
+    if (!d.ok) out.textContent += '\\n[non-zero exit]';
+    out.scrollTop = out.scrollHeight;
+    if (d.ok) toast('packwiz ' + args[0] + ' done');
+    else toast('packwiz exited with error', 'error');
+  } catch(e) {
+    out.textContent += 'Error: ' + e.message;
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run';
+  }
+}
+
+/* ===== TOML EDITOR ===== */
+var tomlCache = {};
+
+async function toggleTomlSection(slug, header) {
+  var sec = document.getElementById('toml-sec-' + slug);
+  if (!sec) return;
+  var isOpen = sec.classList.contains('open');
+  if (isOpen) {
+    sec.classList.remove('open');
+    header.innerHTML = '&#9658; Edit Raw .pw.toml';
+    return;
+  }
+  sec.classList.add('open');
+  header.innerHTML = '&#9660; Edit Raw .pw.toml';
+  var ta = document.getElementById('toml-txt-' + slug);
+  if (tomlCache[slug]) { ta.value = tomlCache[slug].content; return; }
+  ta.value = 'Loading...';
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/toml');
+    var d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Failed');
+    tomlCache[slug] = d;
+    ta.value = d.content;
+  } catch(e) {
+    ta.value = 'Error: ' + e.message;
+  }
+}
+
+async function saveModToml(slug, btn) {
+  var ta = document.getElementById('toml-txt-' + slug);
+  if (!ta) return;
+  var cached = tomlCache[slug];
+  if (!cached) { toast('Load the TOML first', 'error'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/toml', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: ta.value, sha: cached.sha, path: cached.path })
+    });
+    var d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Failed');
+    tomlCache[slug] = null;
+    toast('Saved TOML for ' + slug);
+  } catch(e) {
+    toast('Save error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save TOML';
   }
 }
 
@@ -2639,6 +2874,141 @@ async def trigger_sync():
         if r.status_code not in (200, 400):  # 400 = already active (race), acceptable
             raise HTTPException(502, f"Portainer error: {r.status_code} {r.text[:100]}")
     return {"ok": True}
+
+
+# ===== PACK / PACKWIZ ENDPOINTS =====
+
+@app.get("/api/pack/info")
+async def pack_info():
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+    gh_headers = {"Authorization": f"Bearer {GITHUB_PAT}", "Accept": "application/vnd.github+json"}
+    async with httpx.AsyncClient(timeout=15) as client:
+        r_commit = await client.get(
+            f"{GITHUB_API}/repos/{GITHUB_REPO}/commits/main", headers=gh_headers
+        )
+        r_files = await client.get(
+            f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/mods", headers=gh_headers
+        )
+    commit = r_commit.json() if r_commit.status_code == 200 else {}
+    files = r_files.json() if r_files.status_code == 200 else []
+    pw_count = sum(1 for f in files if isinstance(f, dict) and f.get("name", "").endswith(".pw.toml"))
+    jar_count = sum(1 for f in files if isinstance(f, dict) and f.get("name", "").endswith(".jar"))
+    c = commit.get("commit", {})
+    return {
+        "repo": GITHUB_REPO,
+        "branch": "main",
+        "pw_count": pw_count,
+        "jar_count": jar_count,
+        "last_commit_sha": commit.get("sha", "")[:7],
+        "last_commit_msg": c.get("message", "")[:120],
+        "last_commit_author": c.get("author", {}).get("name", ""),
+    }
+
+
+@app.get("/api/mods/{slug}/toml")
+async def get_mod_toml(slug: str):
+    async with httpx.AsyncClient(timeout=15) as client:
+        for path in [f"mods/{slug}.pw.toml", f"mods/{slug}.pw.toml.disabled"]:
+            data = await github_get_file(client, path)
+            if data:
+                content = base64.b64decode(data["content"].replace("\n", "")).decode("utf-8", errors="replace")
+                return {"content": content, "sha": data["sha"], "path": path}
+    raise HTTPException(404, f"TOML not found for: {slug}")
+
+
+class TomlBody(BaseModel):
+    content: str
+    sha: str
+    path: str
+
+
+@app.put("/api/mods/{slug}/toml")
+async def put_mod_toml(slug: str, body: TomlBody):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+    gh_headers = {"Authorization": f"Bearer {GITHUB_PAT}", "Accept": "application/vnd.github+json", "Content-Type": "application/json"}
+    payload = {
+        "message": f"Edit {body.path}",
+        "content": base64.b64encode(body.content.encode()).decode(),
+        "sha": body.sha,
+    }
+    async with httpx.AsyncClient(timeout=20) as client:
+        r = await client.put(
+            f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{body.path}",
+            headers=gh_headers, json=payload
+        )
+    if r.status_code not in (200, 201):
+        raise HTTPException(502, f"GitHub error: {r.text[:200]}")
+    return {"ok": True}
+
+
+async def _ensure_packwiz():
+    if not os.path.exists(PACKWIZ_BINARY):
+        async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
+            r = await client.get(
+                "https://github.com/packwiz/packwiz/releases/download/v0.5.1/packwiz_linux_amd64.zip"
+            )
+        with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+            with z.open("packwiz") as src, open(PACKWIZ_BINARY, "wb") as dst:
+                dst.write(src.read())
+        os.chmod(PACKWIZ_BINARY, 0o755)
+
+
+async def _ensure_repo():
+    if not shutil.which("git"):
+        subprocess.run(["apk", "add", "--no-cache", "git"], capture_output=True)
+    env = {**os.environ, "HOME": "/tmp"}
+    git_url = f"https://oauth2:{GITHUB_PAT}@github.com/{GITHUB_REPO}.git"
+    if not os.path.exists(os.path.join(PACKWIZ_REPO, ".git")):
+        subprocess.run(["git", "clone", "--depth=1", git_url, PACKWIZ_REPO], env=env, capture_output=True)
+    else:
+        subprocess.run(["git", "fetch", "--depth=1", git_url, "main:main"], env=env, capture_output=True, cwd=PACKWIZ_REPO)
+        subprocess.run(["git", "reset", "--hard", "main"], env=env, capture_output=True, cwd=PACKWIZ_REPO)
+    subprocess.run(["git", "config", "user.email", "packwiz-manager@auto"], cwd=PACKWIZ_REPO, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "packwiz-manager"], cwd=PACKWIZ_REPO, capture_output=True)
+
+
+class PackwizExecBody(BaseModel):
+    args: list
+
+
+@app.post("/api/packwiz/exec")
+async def packwiz_exec(body: PackwizExecBody):
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO required")
+    if not body.args:
+        raise HTTPException(400, "args required")
+    async with packwiz_lock:
+        try:
+            await _ensure_packwiz()
+            await _ensure_repo()
+        except Exception as e:
+            raise HTTPException(500, f"Setup error: {e}")
+
+        env = {**os.environ, "HOME": "/tmp"}
+        proc = subprocess.run(
+            [PACKWIZ_BINARY] + [str(a) for a in body.args],
+            capture_output=True, text=True, cwd=PACKWIZ_REPO, env=env, timeout=120
+        )
+        output = (proc.stdout + proc.stderr).strip()
+
+        # Commit and push if anything changed
+        status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, cwd=PACKWIZ_REPO)
+        committed = False
+        if status.stdout.strip():
+            subprocess.run(["git", "add", "-A"], cwd=PACKWIZ_REPO)
+            msg = "packwiz " + " ".join(str(a) for a in body.args[:3])
+            subprocess.run(["git", "commit", "-m", msg], cwd=PACKWIZ_REPO, env=env, capture_output=True)
+            push_url = f"https://oauth2:{GITHUB_PAT}@github.com/{GITHUB_REPO}.git"
+            push = subprocess.run(
+                ["git", "push", push_url, "main"],
+                capture_output=True, text=True, cwd=PACKWIZ_REPO, env=env
+            )
+            output += "\n" + (push.stdout + push.stderr).strip()
+            committed = True
+
+        return {"ok": proc.returncode == 0, "output": output, "committed": committed}
 
 
 if __name__ == "__main__":
