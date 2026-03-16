@@ -758,6 +758,9 @@ HTML = """<!DOCTYPE html>
   <div class="tab-panel active" id="tab-mods">
     <div class="mods-main">
       <div id="dupBanner" style="display:none"></div>
+      <div id="serverLockBanner" style="display:none;background:rgba(224,82,82,0.12);border:1px solid rgba(224,82,82,0.4);border-radius:6px;padding:0.5rem 0.85rem;margin-bottom:0.6rem;font-size:0.83rem;color:#f08080">
+        &#9888; Serveur en cours d&apos;ex&eacute;cution &mdash; arr&ecirc;tez le serveur avant de modifier les jars.
+      </div>
       <div class="mods-toolbar">
         <input type="text" id="allModsFilter" placeholder="Filter by name..."/>
         <div class="filter-chips" id="filterChips">
@@ -1697,6 +1700,7 @@ function renderAllMods(mods) {
       });
     }
   });
+  if (serverRunning) applyServerLock(true);
 }
 
 async function toggleDisableMod(slug, name, chk) {
@@ -2645,6 +2649,7 @@ async function fetchServerStatus() {
 
 function updateServerStatus(data) {
   var running = !!data.running;
+  var wasRunning = serverRunning;
   serverRunning = running;
   var dot = document.getElementById('srvDot');
   dot.className = 'status-dot ' + (running ? 'running' : 'stopped');
@@ -2656,6 +2661,21 @@ function updateServerStatus(data) {
   document.getElementById('srvStartBtn').disabled = running;
   document.getElementById('srvStopBtn').disabled = !running;
   document.getElementById('srvRestartBtn').disabled = !running;
+  if (running !== wasRunning) applyServerLock(running);
+}
+
+function applyServerLock(running) {
+  var banner = document.getElementById('serverLockBanner');
+  if (banner) banner.style.display = running ? '' : 'none';
+  var selectors = '.dis-toggle, .dl-jar-btn, .rm-all-btn, .update-mod-btn';
+  document.querySelectorAll(selectors).forEach(function(el) {
+    el.disabled = running;
+    if (running) el.setAttribute('title', 'Serveur en cours — arrêtez le serveur pour modifier les jars');
+  });
+  var addBtn = document.getElementById('addModBtn');
+  if (addBtn) addBtn.disabled = running;
+  var linkBtns = document.querySelectorAll('.link-btn');
+  linkBtns.forEach(function(b) { b.disabled = running; });
 }
 
 async function serverAction(action) {
@@ -3584,6 +3604,7 @@ class ServerCommandRequest(BaseModel):
 async def add_mod(req: AddModRequest):
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+    await require_server_stopped()
 
     side = req.side or "client"
     valid_sides = {"client", "server", "both"}
@@ -3680,6 +3701,7 @@ async def add_mod(req: AddModRequest):
 async def toggle_disable_mod(slug: str):
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+    await require_server_stopped()
 
     async with httpx.AsyncClient(timeout=30) as client:
         enabled_path = f"mods/{slug}.pw.toml"
@@ -3796,6 +3818,7 @@ async def download_jar_to_server(slug: str):
     """Download the mod jar from Modrinth/URL into /server-mods."""
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+    await require_server_stopped()
     if not os.path.isdir(SERVER_MODS_DIR):
         raise HTTPException(500, "SERVER_MODS_DIR not available")
 
@@ -3887,6 +3910,7 @@ async def list_mod_versions(slug: str, all: int = 0):
 async def update_mod(slug: str, req: UpdateModRequest = UpdateModRequest()):
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+    await require_server_stopped()
 
     async with httpx.AsyncClient(timeout=30) as client:
         path = f"mods/{slug}.pw.toml"
@@ -4138,6 +4162,7 @@ async def find_raw_jar_in_github(client: httpx.AsyncClient, slug: str) -> Option
 async def remove_mod(slug: str):
     if not GITHUB_PAT or not GITHUB_REPO:
         raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+    await require_server_stopped()
 
     async with httpx.AsyncClient(timeout=20) as client:
         # Try .pw.toml first (and .pw.toml.disabled)
@@ -4192,6 +4217,27 @@ async def remove_mod(slug: str):
 
 
 
+
+
+async def is_crafty_server_running() -> bool:
+    """Returns True if the Crafty-managed Minecraft server is currently running."""
+    if not CRAFTY_URL or not CRAFTY_TOKEN or not CRAFTY_SERVER_ID:
+        return False  # Can't check → assume stopped, don't block
+    url = f"{CRAFTY_URL}/api/v2/servers/{CRAFTY_SERVER_ID}/stats"
+    try:
+        async with httpx.AsyncClient(timeout=5, verify=False) as client:
+            r = await client.get(url, headers=crafty_headers())
+            r.raise_for_status()
+            info = r.json().get("data", r.json())
+            return bool(info.get("running", False))
+    except Exception:
+        return False  # On error → assume stopped, don't block
+
+
+async def require_server_stopped():
+    """Raise 409 if the Minecraft server is running."""
+    if await is_crafty_server_running():
+        raise HTTPException(409, "Le serveur Minecraft est en cours d'exécution — arrêtez-le avant de modifier les jars.")
 
 
 # ===== SERVER (CRAFTY) ENDPOINTS =====
