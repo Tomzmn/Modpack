@@ -4129,20 +4129,18 @@ async def upload_mod_jar(slug: str, file: UploadFile = File(...)):
         except httpx.HTTPStatusError as e:
             raise HTTPException(500, f"GitHub jar upload failed: {e.response.text[:200]}")
 
-        # Update .pw.toml: patch filename + hash, preserve all other fields
+        # Update .pw.toml: patch filename + hash, preserve side/option, strip Modrinth update section
         if old_toml_raw:
-            # Patch filename field
-            new_toml = re.sub(r'^filename\s*=\s*"[^"]*"', f'filename = "{filename}"', old_toml_raw, flags=re.MULTILINE)
-            # Patch or add hash
-            if re.search(r'^hash\s*=', new_toml, re.MULTILINE):
-                new_toml = re.sub(r'^hash\s*=\s*"[^"]*"', f'hash = "{sha512}"', new_toml, flags=re.MULTILINE)
-            else:
-                new_toml += f'\nhash = "{sha512}"\n'
-            # Patch hash-format
-            if re.search(r'^hash-format\s*=', new_toml, re.MULTILINE):
-                new_toml = re.sub(r'^hash-format\s*=\s*"[^"]*"', 'hash-format = "sha512"', new_toml, flags=re.MULTILINE)
-            # Remove download url (local override has no remote url)
-            new_toml = re.sub(r'^url\s*=\s*"[^"]*"\n?', '', new_toml, flags=re.MULTILINE)
+            parsed = parse_toml_simple(old_toml_raw)
+            side = parsed.get("side", "both")
+            option = parsed.get("option", {})
+            new_toml = build_pw_toml_override(name, filename, sha512, side=side)
+            # Re-apply [option] block if present
+            if option.get("optional") or option.get("pinned"):
+                if option.get("optional"):
+                    new_toml = patch_toml_content(new_toml, side, True, bool(option.get("default", False)))
+                if option.get("pinned"):
+                    new_toml = new_toml.rstrip("\n") + "\n\n[option]\npinned = true\n" if "[option]" not in new_toml else new_toml
         else:
             new_toml = build_pw_toml_override(name, filename, sha512, side="both")
 
