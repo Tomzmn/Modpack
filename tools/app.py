@@ -354,6 +354,24 @@ HTML = """<!DOCTYPE html>
     font-size: 0.72rem;
     font-weight: 700;
   }
+  .jar-present-badge {
+    background: rgba(76,175,130,0.12);
+    border: 1px solid rgba(76,175,130,0.5);
+    color: #6dd6a6;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .jar-missing-badge {
+    background: rgba(224,82,82,0.12);
+    border: 1px solid rgba(224,82,82,0.5);
+    color: #f08080;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
   .mod-version {
     font-size: 0.72rem;
     color: var(--text-muted);
@@ -1523,6 +1541,8 @@ function renderAllMods(mods) {
     var slug = m.slug;
     var hasMod = !!m.mod_id;
     var fname = m.filename ? escHtml(m.filename) : '';
+    var needsJar = inPack && sid !== 'client' && !m.in_server;
+    var hasJar = inPack && sid !== 'client' && !!m.in_server;
     return '<div class="mod-item' + (isDisabled ? ' disabled-mod' : '') + '" id="allmod-' + escHtml(slug) + '" data-name="' + escHtml(m.name.toLowerCase()) + '">' +
       '<div class="mod-item-row">' +
         (m.icon ? '<img class="mod-icon" src="' + escHtml(m.icon) + '" onerror="this.remove()" loading="lazy"/>' : '<div class="mod-icon-placeholder">&#x1F9E9;</div>') +
@@ -1535,6 +1555,8 @@ function renderAllMods(mods) {
             (isOpt ? '<span class="optional-badge">optional</span>' : '') +
             (isOpt && isDef ? '<span class="default-badge">default on</span>' : '') +
             (isPinned ? '<span class="pinned-badge">&#128204; pinned</span>' : '') +
+            (hasJar ? '<span class="jar-present-badge" title="Jar présent dans /server-mods">&#10003; jar</span>' : '') +
+            (needsJar ? '<span class="jar-missing-badge" title="Jar absent de /server-mods">&#10007; jar manquant</span>' : '') +
             (hasMod ? ' <a href="https://modrinth.com/mod/' + escHtml(m.mod_id) + '" target="_blank" rel="noopener" style="font-size:0.78rem">Modrinth</a>' : '') +
           '</div>' +
         '</div>' +
@@ -1543,6 +1565,7 @@ function renderAllMods(mods) {
             '<input type="checkbox" class="dis-toggle" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" ' + (!isDisabled ? 'checked' : '') + '/>' +
             '<span class="toggle-slider"></span>' +
           '</label>' +
+          (needsJar ? '<button class="ghost sm dl-jar-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" title="Télécharger le jar dans /server-mods">&#11015; Download</button>' : '') +
           (hasMod && !isPinned ? '<button class="ghost sm update-mod-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Update</button>' : '') +
           (!inPack ? '<button class="ghost sm link-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '" style="color:var(--accent)">Link</button>' : '') +
           '<button class="ghost sm edit-btn" data-slug="' + escHtml(slug) + '">Edit</button>' +
@@ -1631,6 +1654,9 @@ function renderAllMods(mods) {
   });
   el.querySelectorAll('.pin-chk').forEach(function(chk) {
     chk.addEventListener('change', function() { togglePinMod(chk.dataset.slug, chk.dataset.name, chk.checked, chk); });
+  });
+  el.querySelectorAll('.dl-jar-btn').forEach(function(b) {
+    b.addEventListener('click', function() { downloadJar(b.dataset.slug, b.dataset.name, b); });
   });
   el.querySelectorAll('.update-mod-btn').forEach(function(b) {
     b.addEventListener('click', function() { updateSingleMod(b.dataset.slug, b.dataset.name, b); });
@@ -1830,6 +1856,21 @@ async function updateSingleMod(slug, name, btn) {
     toast('Update error: ' + e.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
+  }
+}
+
+async function downloadJar(slug, name, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Downloading...'; }
+  try {
+    var res = await fetch('/api/mods/' + encodeURIComponent(slug) + '/download-jar', { method: 'POST' });
+    var data = await safeJson(res);
+    if (!res.ok) throw new Error(data.detail || 'Download failed');
+    toast('Jar téléchargé: ' + name);
+    allModsLoaded = false;
+    await loadAllMods();
+  } catch(e) {
+    toast('Erreur: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '\u2B07 Download'; }
   }
 }
 
@@ -3748,6 +3789,49 @@ async def toggle_disable_mod(slug: str):
                 return {"ok": True, "slug": slug, "name": name, "disabled": False}
             else:
                 raise HTTPException(404, f"Mod file not found: {slug}")
+
+
+@app.post("/api/mods/{slug}/download-jar")
+async def download_jar_to_server(slug: str):
+    """Download the mod jar from Modrinth/URL into /server-mods."""
+    if not GITHUB_PAT or not GITHUB_REPO:
+        raise HTTPException(500, "GITHUB_PAT and GITHUB_REPO environment variables are required")
+    if not os.path.isdir(SERVER_MODS_DIR):
+        raise HTTPException(500, "SERVER_MODS_DIR not available")
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        # Find the .pw.toml in GitHub
+        for candidate in [f"mods/{slug}.pw.toml", f"mods/{slug}.pw.toml.disabled"]:
+            existing = await github_get_file(client, candidate)
+            if existing:
+                break
+        else:
+            raise HTTPException(404, f"Mod not found: {slug}")
+
+        raw_b64 = existing.get("content", "")
+        raw_content = base64.b64decode(raw_b64.replace("\n", "")).decode("utf-8", errors="replace")
+        data = parse_toml_simple(raw_content)
+
+        filename = data.get("filename", "")
+        if not filename:
+            raise HTTPException(400, "No filename in .pw.toml")
+
+        file_url = data.get("download", {}).get("url", "")
+        if not file_url:
+            raise HTTPException(400, "No download URL in .pw.toml")
+
+        dest = os.path.join(SERVER_MODS_DIR, filename)
+        try:
+            dl = await client.get(file_url, follow_redirects=True)
+            dl.raise_for_status()
+            with open(dest, "wb") as f:
+                f.write(dl.content)
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(502, f"Download failed: {e.response.status_code}")
+        except Exception as e:
+            raise HTTPException(500, f"Download error: {e}")
+
+    return {"ok": True, "slug": slug, "filename": filename}
 
 
 @app.get("/api/mods/{slug}/versions")
