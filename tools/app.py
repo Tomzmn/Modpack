@@ -2651,9 +2651,11 @@ async def github_put_file_bytes(client: httpx.AsyncClient, path: str, content_by
 
 
 async def github_delete_file(client: httpx.AsyncClient, path: str, message: str, sha: str):
+    import json as _json
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
     body = {"message": message, "sha": sha}
-    r = await client.delete(url, headers=gh_headers(), json=body)
+    headers = {**gh_headers(), "Content-Type": "application/json"}
+    r = await client.request("DELETE", url, headers=headers, content=_json.dumps(body).encode())
     r.raise_for_status()
     return r.json()
 
