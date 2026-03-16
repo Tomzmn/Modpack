@@ -3965,6 +3965,7 @@ async def update_mod(slug: str, req: UpdateModRequest = UpdateModRequest()):
         new_version_id = version.get("id", "")
         if new_version_id == current_version_id and not req.version_id:
             return {"ok": True, "slug": slug, "name": name, "updated": False, "new_version_id": new_version_id}
+        # If same version explicitly requested, still proceed to update (e.g. to restore jar)
 
         files = version.get("files", [])
         if not files:
@@ -3981,10 +3982,16 @@ async def update_mod(slug: str, req: UpdateModRequest = UpdateModRequest()):
 
         toml_content = build_pw_toml(name, filename, mod_id, new_version_id, file_url, sha512, side=side)
 
-        # Re-apply option section if present
+        # Re-apply option section preserving optional, default, and pinned
         option = data.get("option", {})
-        if option.get("optional"):
-            toml_content = patch_toml_content(toml_content, side, True, bool(option.get("default", False)))
+        if option.get("optional") or option.get("pinned"):
+            toml_content = patch_toml_content(toml_content, side, bool(option.get("optional", False)), bool(option.get("default", False)))
+            if option.get("pinned"):
+                if "[option]" not in toml_content:
+                    toml_content = toml_content.rstrip("\n") + "\n\n[option]\npinned = true\n"
+                else:
+                    import re as _re
+                    toml_content = _re.sub(r'(\[option\][^\[]*)', lambda m: m.group(0).rstrip("\n") + "\npinned = true\n" if "pinned" not in m.group(0) else m.group(0), toml_content, count=1)
 
         commit_msg = f"Update mod: {name} -> {new_version_id}"
         try:
