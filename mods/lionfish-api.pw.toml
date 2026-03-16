@@ -5,3 +5,6 @@ side = "both"
 [download]
 hash-format = "sha512"
 hash = "0d01df4c114ee86583d5bca12083ce49f68f19a5b3d6b78efb855eff91e6bfaf653693112b043923d064fff702bea41170710bcfdc0011dec2b223abe6a0953f"
+
+[option]
+pinned = true
