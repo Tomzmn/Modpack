@@ -5,10 +5,6 @@ file = "mods/AE2NetworkAnalyzer-1.20-1.0.6-forge.jar"
 hash = "9c10ab288402b6a01815d58029298fc56dd482f045511ad35104b17e9b6c4393"
 
 [[files]]
-file = "mods/FastLeafDecay-32.jar"
-hash = "ce48db06bfb5830c147969793771a8f8b5a5774b182543b906bc439efd4e9469"
-
-[[files]]
 file = "mods/FastSuite-1.20.1-5.1.2.jar"
 hash = "5e05cb3ce05785a0061a41b7a83443074a6c26dd7d9db75c453fa2487481d54e"
 
@@ -762,4 +758,4 @@ metafile = true
 
 [[files]]
 file = "tools/app.py"
-hash = "50537761884a07cbd8e7cdea6493b19671900965983f72341f966b5f8a969bf7"
+hash = "fa7eeb9be76e41f9ab94d0a58ea7ae36aa07aee77358a08b3c01823b051a68f9"
