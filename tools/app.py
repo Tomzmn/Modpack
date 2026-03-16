@@ -3251,6 +3251,26 @@ async def add_curseforge_mod(req: AddCFModRequest):
                     await github_delete_file(client, f"mods/{jar_entry['name']}", f"Remove raw jar: {jar_entry['name']}", jar_entry["sha"])
                 except Exception:
                     pass
+            # Also remove from /server-mods
+            if os.path.isdir(SERVER_MODS_DIR):
+                for fname in os.listdir(SERVER_MODS_DIR):
+                    if slugify_jar(fname) == req.remove_raw_jar_slug:
+                        try:
+                            os.remove(os.path.join(SERVER_MODS_DIR, fname))
+                        except OSError:
+                            pass
+                        break
+
+        # Download jar to /server-mods if side != client
+        if side != "client" and os.path.isdir(SERVER_MODS_DIR) and download_url:
+            dest = os.path.join(SERVER_MODS_DIR, filename)
+            try:
+                dl = await client.get(download_url, follow_redirects=True)
+                dl.raise_for_status()
+                with open(dest, "wb") as f:
+                    f.write(dl.content)
+            except Exception:
+                pass  # Non-fatal
 
     return {"ok": True, "slug": slug, "name": name, "file_id": file_id}
 
@@ -3600,6 +3620,17 @@ async def add_mod(req: AddModRequest):
                         except OSError:
                             pass
                         break
+
+        # Download jar to /server-mods if side != client
+        if side != "client" and os.path.isdir(SERVER_MODS_DIR) and file_url:
+            dest = os.path.join(SERVER_MODS_DIR, filename)
+            try:
+                dl = await client.get(file_url, follow_redirects=True)
+                dl.raise_for_status()
+                with open(dest, "wb") as f:
+                    f.write(dl.content)
+            except Exception:
+                pass  # Non-fatal — sync.sh will handle it on next cycle
 
     return {"ok": True, "slug": slug, "name": name, "version_id": version_id}
 
