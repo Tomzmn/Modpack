@@ -995,10 +995,46 @@ async function removeMod(slug, name, btn) {
     var data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Remove failed');
     toast('Removed: ' + name);
-    await loadMods();
+    allModsLoaded = false;
+    await loadAllMods();
   } catch(e) {
     toast('Error: ' + e.message, 'error');
     if (btn) { btn.disabled = false; btn.textContent = 'Remove'; }
+  }
+}
+
+function removeModConfirm(slug, name, btn) {
+  if (btn.dataset.confirming === '1') {
+    clearTimeout(btn._confirmTimer);
+    btn.dataset.confirming = '0';
+    btn.textContent = 'Removing...';
+    btn.disabled = true;
+    fetch('/api/mods/' + encodeURIComponent(slug), { method: 'DELETE' })
+      .then(function(res) { return res.json().then(function(d) { return {ok: res.ok, d: d}; }); })
+      .then(function(r) {
+        if (!r.ok) throw new Error(r.d.detail || 'Remove failed');
+        toast('Removed: ' + name);
+        var item = document.getElementById('allmod-' + slug);
+        if (item) item.remove();
+        allMods = allMods.filter(function(m) { return m.slug !== slug; });
+        installedSlugs.delete(slug);
+        document.getElementById('allModsCount').textContent = allMods.length + ' mod' + (allMods.length !== 1 ? 's' : '');
+      })
+      .catch(function(e) {
+        toast('Error: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Remove';
+        btn.classList.remove('danger');
+      });
+  } else {
+    btn.dataset.confirming = '1';
+    btn.textContent = 'Confirm?';
+    btn.classList.add('danger');
+    btn._confirmTimer = setTimeout(function() {
+      btn.dataset.confirming = '0';
+      btn.textContent = 'Remove';
+      btn.classList.remove('danger');
+    }, 3000);
   }
 }
 
@@ -1181,6 +1217,7 @@ function renderAllMods(mods) {
           '</label>' +
           (hasMod ? '<button class="ghost sm update-mod-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Update</button>' : '') +
           '<button class="ghost sm edit-btn" data-slug="' + escHtml(slug) + '">Edit</button>' +
+          (inPack ? '<button class="ghost sm danger rm-all-btn" data-slug="' + escHtml(slug) + '" data-name="' + escHtml(m.name) + '">Remove</button>' : '') +
         '</div>' +
       '</div>' +
       '<div class="edit-panel" id="edit-' + escHtml(slug) + '">' +
@@ -1236,6 +1273,9 @@ function renderAllMods(mods) {
   });
   el.querySelectorAll('.update-mod-btn').forEach(function(b) {
     b.addEventListener('click', function() { updateSingleMod(b.dataset.slug, b.dataset.name, b); });
+  });
+  el.querySelectorAll('.rm-all-btn').forEach(function(b) {
+    b.addEventListener('click', function() { removeModConfirm(b.dataset.slug, b.dataset.name, b); });
   });
   el.querySelectorAll('.dis-toggle').forEach(function(chk) {
     chk.addEventListener('change', function() { toggleDisableMod(chk.dataset.slug, chk.dataset.name, chk); });
