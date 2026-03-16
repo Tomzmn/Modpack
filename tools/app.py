@@ -3684,7 +3684,34 @@ async def toggle_disable_mod(slug: str):
             return {"ok": True, "slug": slug, "name": name, "disabled": False}
 
         else:
-            raise HTTPException(404, f"Mod file not found: {slug}")
+            # Fallback: untracked mod (no .pw.toml) — toggle jar on server filesystem only
+            server_dir = SERVER_MODS_DIR
+            if not os.path.isdir(server_dir):
+                raise HTTPException(404, f"Mod file not found: {slug}")
+            # Find matching jar by slug
+            matched_jar = None
+            matched_disabled_jar = None
+            for fname in os.listdir(server_dir):
+                if fname.endswith(".jar") and slugify_jar(fname) == slug:
+                    matched_jar = fname
+                elif fname.endswith(".jar.disabled") and slugify_jar(fname) == slug:
+                    matched_disabled_jar = fname
+            if matched_jar:
+                # Enable → disable
+                src = os.path.join(server_dir, matched_jar)
+                dst = src + ".disabled"
+                os.rename(src, dst)
+                name = matched_jar.replace(".jar", "")
+                return {"ok": True, "slug": slug, "name": name, "disabled": True}
+            elif matched_disabled_jar:
+                # Disable → enable
+                src = os.path.join(server_dir, matched_disabled_jar)
+                dst = src.replace(".jar.disabled", ".jar")
+                os.rename(src, dst)
+                name = matched_disabled_jar.replace(".jar.disabled", "")
+                return {"ok": True, "slug": slug, "name": name, "disabled": False}
+            else:
+                raise HTTPException(404, f"Mod file not found: {slug}")
 
 
 @app.get("/api/mods/{slug}/versions")
