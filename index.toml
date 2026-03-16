@@ -363,6 +363,11 @@ hash = "9e8dd3e6c43542e5edc72259a9be1d3815b87cc3baca9ea071b39c3f06dbb1fc"
 metafile = true
 
 [[files]]
+file = "mods/lionfish-api.pw.toml"
+hash = "3e055c411c197b2103e338dc9fdcd37272df81aaf4246f801694f97feaf7d232"
+metafile = true
+
+[[files]]
 file = "mods/lithostitched.pw.toml"
 hash = "45c55bdbbf2240dfa30cedb5cd437f5716ccf09a707dcdffbe7f39af3e19ff7f"
 metafile = true
@@ -505,6 +510,21 @@ hash = "5c07edd0c8fe82e85efd6c027476ba54cf98291526803b74614c3436292e4ab6"
 metafile = true
 
 [[files]]
+file = "mods/sophisticated-backpacks.pw.toml"
+hash = "a65d2cffcbb752b5eefcf729e21eb68d4895cfaa6e71b1d48569301aa72557ba"
+metafile = true
+
+[[files]]
+file = "mods/sophisticated-core.pw.toml"
+hash = "007044654cd508bbf0335fd102dabf21ab3cb332f8c2cd11f022c9d781926511"
+metafile = true
+
+[[files]]
+file = "mods/sophisticated-storage.pw.toml"
+hash = "2b035edc2771212ace4171ec078c8ca82ffba30e6137441a27391ffb48fce9e7"
+metafile = true
+
+[[files]]
 file = "mods/spark.pw.toml"
 hash = "0ef2a47f506c83478052262348c105c307d970fbff3f6b0917e46d67f61d8953"
 metafile = true
@@ -517,6 +537,11 @@ metafile = true
 [[files]]
 file = "mods/structure-gel-api.pw.toml"
 hash = "0a1893b4abfd0e7243095240b329552c082dd3fa7874b43e9b43c94812875472"
+metafile = true
+
+[[files]]
+file = "mods/supermartijn642s-config-lib.pw.toml"
+hash = "1cf9cb3955b075664ea4fba13b47fe7160975740a28864983aebd53d39c1946e"
 metafile = true
 
 [[files]]
@@ -709,4 +734,4 @@ metafile = true
 
 [[files]]
 file = "tools/app.py"
-hash = "c7f475748e1750759de5e430ee771a99e11160f9ce256dc3e055891eecc073a2"
+hash = "8f0d39509e8af178bf9d5a84a2a03c50fab3caae0c1f5a9e8c7c489842766887"
