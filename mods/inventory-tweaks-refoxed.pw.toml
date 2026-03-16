@@ -11,3 +11,6 @@ hash = "da66e64b3bca754076fec4a0d1e70d4a17c57ba3586ff38842d8ecff0ba4353f3a626ef2
 [update.modrinth]
 mod-id = "uqnMI1kq"
 version = "eyPkQyNd"
+
+[option]
+pinned = true
