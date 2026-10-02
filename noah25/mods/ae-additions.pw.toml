@@ -1,0 +1,13 @@
+name = "AE Additions"
+filename = "AEAdditions-1.20.1-5.1.0.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/BaiPFaoT/versions/lVBUCO0N/AEAdditions-1.20.1-5.1.0.jar"
+hash-format = "sha512"
+hash = "e8214a1c4e7ab2dc40647f3cbf2d46973178e9cba0c4fe8241446bf1f62d30c1a12de583ab543547c2a198de53cca59ba15db25f556e547f40d39ad4a2fdd37f"
+
+[update]
+[update.modrinth]
+mod-id = "BaiPFaoT"
+version = "lVBUCO0N"

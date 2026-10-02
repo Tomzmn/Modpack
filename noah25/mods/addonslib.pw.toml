@@ -1,0 +1,13 @@
+name = "AddonsLib"
+filename = "addonslib-1.20.1-1.4.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/cl5ec0Qm/versions/q3N4HHEI/addonslib-1.20.1-1.4.jar"
+hash-format = "sha512"
+hash = "fee31ba58b1c2844e0dd827ba0fb4d1efd50fb7ff65f593dc9a5c773b9ec2b3dfb3869c00a28a0da513a1cf068feca01f30f272bc980f1a1e1ee550105a4e34d"
+
+[update]
+[update.modrinth]
+mod-id = "cl5ec0Qm"
+version = "q3N4HHEI"

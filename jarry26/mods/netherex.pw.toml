@@ -1,0 +1,13 @@
+name = "NetherEx"
+filename = "NetherEx-neoforge-1.21.1-1.2.4.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/2PIVd4Ik/versions/K4PrP7Vb/NetherEx-neoforge-1.21.1-1.2.4.jar"
+hash-format = "sha512"
+hash = "81b36c356022b304d9bb0155da56e4283463c19dfae5058d709ddde5a93ec0cb652eda91b75c538e9321713d1653b528bf34991d792aa5ae4b2ea77b9f1acd4f"
+
+[update]
+[update.modrinth]
+mod-id = "2PIVd4Ik"
+version = "K4PrP7Vb"

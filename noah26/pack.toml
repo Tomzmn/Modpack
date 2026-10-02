@@ -1,0 +1,13 @@
+name = "noah26"
+author = "Tomzmn"
+version = "2026.10.03"
+pack-format = "packwiz:1.1.0"
+
+[index]
+file = "index.toml"
+hash-format = "sha256"
+hash = "d8039fd9f33ac99fa4d1e86fbb467e6c98b644462577233a334b01c8c64c2df0"
+
+[versions]
+forge = "47.4.0"
+minecraft = "1.20.1"

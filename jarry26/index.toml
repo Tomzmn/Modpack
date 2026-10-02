@@ -1,0 +1,126 @@
+hash-format = "sha256"
+
+[[files]]
+file = "mods/aether.pw.toml"
+hash = "cc3f6e6e8f1838d16e47cce9241e32176279673efb1438ff4451ccffa9579b14"
+metafile = true
+
+[[files]]
+file = "mods/appleskin.pw.toml"
+hash = "3b5f3feca8b299f947ed3956e49f7c3940793754928f2f99cad936448208a501"
+metafile = true
+
+[[files]]
+file = "mods/balm.pw.toml"
+hash = "5efd5a43d4d3c95d32039a0f1a8bf82733f2b37745532cdbe4cb3f9a02b26159"
+metafile = true
+
+[[files]]
+file = "mods/biomes-o-plenty.pw.toml"
+hash = "9b1610cd28c49d34ce2fd760d208fb569f0e20055fee4c81ed4da6489b340312"
+metafile = true
+
+[[files]]
+file = "mods/ferrite-core.pw.toml"
+hash = "73360e397134d238ee8fd21d33fd7f9275e9441f74f8f1b6ed92278877c0b9f1"
+metafile = true
+
+[[files]]
+file = "mods/friends-and-foes-forge.pw.toml"
+hash = "ba6210ddd0664a7d21e3a5553c2a6e8ffb012676d2acacf1181675738a4c7556"
+metafile = true
+
+[[files]]
+file = "mods/geckolib.pw.toml"
+hash = "415ae259d7d6c92717710d6f80494d9f3c0884c6a2a35f993ad31e287f64632f"
+metafile = true
+
+[[files]]
+file = "mods/glitchcore.pw.toml"
+hash = "dbd756dd9bb17e6ecebcf2d7052a67a2da1c7dd378bc2089bc154916080fe031"
+metafile = true
+
+[[files]]
+file = "mods/gravestone-mod.pw.toml"
+hash = "2ac1df7fad83d36e69b4aaad32f0b952c9b039d7345592bb66934f40a8606224"
+metafile = true
+
+[[files]]
+file = "mods/iron-chests.pw.toml"
+hash = "dece537517d18acee6cb2d7078200f0476b5d7e2424676d1b290994fd40b2b48"
+metafile = true
+
+[[files]]
+file = "mods/jei.pw.toml"
+hash = "70ddaf1845b7ff486103452ecdbbf123df5097eba54e3f1188f003f5bbdfb85e"
+metafile = true
+
+[[files]]
+file = "mods/journeymap.pw.toml"
+hash = "cc903c56f854019dc420ab9a088e1a3a328e7839291aafae038f37005e59988e"
+metafile = true
+
+[[files]]
+file = "mods/modernfix.pw.toml"
+hash = "6ae9430e2319ead3cb8580633c13d119c9d06f097204f3f8afbc0e4681e9a807"
+metafile = true
+
+[[files]]
+file = "mods/neovelocity.pw.toml"
+hash = "701c3f61feb03b71471f951249996e61f1c75e7951825e61f039030bd05771b8"
+metafile = true
+
+[[files]]
+file = "mods/netherex.pw.toml"
+hash = "9a87e6996e84b19be3a28c30d681e4a911f8a1e150022654d08991d6c8409498"
+metafile = true
+
+[[files]]
+file = "mods/owo-lib.pw.toml"
+hash = "46831c04077a06df823bcd0f254833a90a9a9ccc78f5069f4b4c27fa301ac0cf"
+metafile = true
+
+[[files]]
+file = "mods/resourceful-config.pw.toml"
+hash = "27721caca5a03b743bf25888e1d984142948069dace31453f103f94f7f24d2ce"
+metafile = true
+
+[[files]]
+file = "mods/resourceful-lib.pw.toml"
+hash = "c0b066684294c33972d562e0cb08ea17b2d31bcf86cd1d6c63b8e968f0eac7a2"
+metafile = true
+
+[[files]]
+file = "mods/sodium.pw.toml"
+hash = "9bda5c5784ac697fc6fe0c1c6e8fec99dac8e2140c500150f055b75bc4a22a3a"
+metafile = true
+
+[[files]]
+file = "mods/terrablender-neoforge.pw.toml"
+hash = "d77e4dc337b6090358c1ef01b0f99a8357e5279443e0e23e511de1be865c01c9"
+metafile = true
+
+[[files]]
+file = "mods/terralith.pw.toml"
+hash = "da7ee99189ad35aac094919fe33cac647d98533b23c228f10d4811f08989e2b8"
+metafile = true
+
+[[files]]
+file = "mods/the-twilight-forest.pw.toml"
+hash = "b2dd43f9809966eaed8ece9f72ec9ca4f35e8b1d5fd04cb7aa54d847ac9dab91"
+metafile = true
+
+[[files]]
+file = "mods/waystones.pw.toml"
+hash = "fc5573e012ed7c118b160bb557412d1f781784a1f00f3ab4a3f8ebce44993f28"
+metafile = true
+
+[[files]]
+file = "mods/when-dungeons-arise.pw.toml"
+hash = "7e6948368276f2c49d5bccf52cbf80930d0daca75b4dfbc5530479f1d3f95cf8"
+metafile = true
+
+[[files]]
+file = "mods/yacl.pw.toml"
+hash = "539f362e9e192cf3b2813e0dfdfc51a5e6814129c6e82a9733842529beea6242"
+metafile = true

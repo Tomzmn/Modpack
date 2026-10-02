@@ -1,0 +1,13 @@
+name = "jarry26"
+author = "Tomzmn"
+version = "2026.10.03"
+pack-format = "packwiz:1.1.0"
+
+[index]
+file = "index.toml"
+hash-format = "sha256"
+hash = "4ccca3ecbec9399b204347e63a0ecbd86a7ef407c9555a9dd285e4976dea547b"
+
+[versions]
+minecraft = "1.21.1"
+neoforge = "21.1.219"
