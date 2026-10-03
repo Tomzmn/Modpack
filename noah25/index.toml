@@ -482,7 +482,7 @@ metafile = true
 
 [[files]]
 file = "mods/oh-the-trees-youll-grow.pw.toml"
-hash = "ea58ea3a87257471a762045e1c44e0f4ea92f3944054825b9033fd7afcce8ec9"
+hash = "59bcc724e7b927fbba1a1366657dfc9457dd4784661b585844b41b643e83b784"
 metafile = true
 
 [[files]]
@@ -663,6 +663,16 @@ metafile = true
 [[files]]
 file = "mods/waterframes.pw.toml"
 hash = "d0caa1c4b9734ec5e846dc7bdffe158604a176e276312b1abaac98b5cbd4918e"
+metafile = true
+
+[[files]]
+file = "mods/watermedia-yt-plugin.pw.toml"
+hash = "79e2fcf85fb4e4e4248844f4ec18daaedcd5a45157222e26383eabb29c99d60e"
+metafile = true
+
+[[files]]
+file = "mods/watermedia.pw.toml"
+hash = "976854e8cb0473236ae4ce6b5b29bb901dc46b20d072bfed79e1f07c64b37095"
 metafile = true
 
 [[files]]
