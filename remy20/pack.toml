@@ -1,0 +1,12 @@
+name = "remy20"
+author = "Tomzmn"
+version = "2026.10.03"
+pack-format = "packwiz:1.1.0"
+
+[index]
+file = "index.toml"
+hash-format = "sha256"
+hash = "7fad2c224cd48473ddf383ad114f23b0cb6789461ba344db9ac795d8b01272ab"
+
+[versions]
+minecraft = "1.21.10"

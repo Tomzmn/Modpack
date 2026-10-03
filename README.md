@@ -24,6 +24,7 @@ elle réveille le serveur, met les mods à jour, puis connecte le jeu.
 | **noah25** | `noah25.tomz.fr` | Minecraft 1.20.1 · Forge 47.4.0 · 153 mods | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/noah25) | [noah25.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-noah25/noah25.zip) |
 | **noah26** | `noah26.tomz.fr` | Minecraft 1.20.1 · Forge 47.4.0 · 151 mods · 2 packs de ressources | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/noah26) | [noah26.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-noah26/noah26.zip) |
 | **remy19** | `remy19.tomz.fr` | Minecraft 1.21.10 · 12 plugins | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/remy19) | [remy19.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-remy19/remy19.zip) |
+| **remy20** | `remy20.tomz.fr` | Minecraft 1.21.10 · 12 plugins | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/remy20) | [remy20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-remy20/remy20.zip) |
 
 <!-- /sommaire -->
 
