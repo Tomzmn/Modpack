@@ -51,11 +51,6 @@ hash = "dece537517d18acee6cb2d7078200f0476b5d7e2424676d1b290994fd40b2b48"
 metafile = true
 
 [[files]]
-file = "mods/jade.pw.toml"
-hash = "4de3e4a1a49e332c1ad313283e0403c4273b628d634c17a9ff0c9da3d6b67f9a"
-metafile = true
-
-[[files]]
 file = "mods/jei.pw.toml"
 hash = "70ddaf1845b7ff486103452ecdbbf123df5097eba54e3f1188f003f5bbdfb85e"
 metafile = true
@@ -68,11 +63,6 @@ metafile = true
 [[files]]
 file = "mods/modernfix.pw.toml"
 hash = "6ae9430e2319ead3cb8580633c13d119c9d06f097204f3f8afbc0e4681e9a807"
-metafile = true
-
-[[files]]
-file = "mods/mouse-tweaks.pw.toml"
-hash = "6bc414cc0f2d4c078fe83f384d786343f701f371d657c5279b5b0df1595804bd"
 metafile = true
 
 [[files]]
@@ -103,11 +93,6 @@ metafile = true
 [[files]]
 file = "mods/sodium.pw.toml"
 hash = "9bda5c5784ac697fc6fe0c1c6e8fec99dac8e2140c500150f055b75bc4a22a3a"
-metafile = true
-
-[[files]]
-file = "mods/spark.pw.toml"
-hash = "5995decc8738d7ddccec218dfa1ed95db9eca5bb64c98fd2cede8bf9bbc837c2"
 metafile = true
 
 [[files]]
