@@ -1,0 +1,8 @@
+name = "CoreProtect"
+filename = "CoreProtect-2.17.5.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/CoreProtect-2.17.5.jar"
+hash-format = "sha512"
+hash = "6a011c1bbb4987acaaddba44fe9f827a8378726e1c0fb7a12bf18150b4bb0661ae8db1102faf4fde377f5f28c7e5c6af1a185f21db9aa5a77f8220ae7bcb1570"

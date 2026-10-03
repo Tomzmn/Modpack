@@ -1,0 +1,8 @@
+name = "ActionHealth"
+filename = "ActionHealth.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/ActionHealth.jar"
+hash-format = "sha512"
+hash = "a00a855adef1d95c446d7c65d6186ffdf4e8145ecbd9612d9f16b9b237c64f490adacc4c2d4dedd7d333f3dd2903cfa01f56fa972dcb800148192cf502eff716"

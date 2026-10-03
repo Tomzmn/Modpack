@@ -1,0 +1,8 @@
+name = "EssentialsChat"
+filename = "EssentialsXChat-2.17.0.3.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/EssentialsXChat-2.17.0.3.jar"
+hash-format = "sha512"
+hash = "ddb2d7525ddc2339faa73e18521a0418bac7ab9a2146bbcf114abd5798658b7a299e388f435608dbd965f38148678371b8ac7be96e8294ebafe08e4a8edecfe6"

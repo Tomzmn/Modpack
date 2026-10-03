@@ -1,2 +1,61 @@
 hash-format = "sha256"
-files = []
+
+[[files]]
+file = "plugins/actionhealth.pw.toml"
+hash = "d1e701d3d2c9e46da96afe782fefab14f8e9942b8e418783c75d1422a65a9c89"
+metafile = true
+
+[[files]]
+file = "plugins/coreprotect.pw.toml"
+hash = "4c72488c30add2de1f500c3edab342b37912a249aebbf99127aabd670670cae8"
+metafile = true
+
+[[files]]
+file = "plugins/dynmap.pw.toml"
+hash = "ae01950da69013d2c0f0f388b66ed489c5730743d536713387ef20d6e69b6886"
+metafile = true
+
+[[files]]
+file = "plugins/essentials.pw.toml"
+hash = "3a2d0514bde844edf4abfc154d448408363da48f33ee17d3ab543343fddf3a14"
+metafile = true
+
+[[files]]
+file = "plugins/essentialschat.pw.toml"
+hash = "d6791d6f7cd2425120d0cedfe81c9b837409948311f5fb1af3c6bbcbd9d9bbad"
+metafile = true
+
+[[files]]
+file = "plugins/healthbar.pw.toml"
+hash = "23181be40b492106cc13ef85399208a7348ec85d97bc09388229a92233ee5e58"
+metafile = true
+
+[[files]]
+file = "plugins/multiverse-core.pw.toml"
+hash = "ca856641202336b27fbdfce409c4abc30ad723d212631001e7a7d6f70544a654"
+metafile = true
+
+[[files]]
+file = "plugins/multiverse-signportals.pw.toml"
+hash = "fe035afb6ea7e57904740530ac1b02f693176628fa46548882dedf3bfb7fecd7"
+metafile = true
+
+[[files]]
+file = "plugins/permissionsex.pw.toml"
+hash = "09989943ba2a74caf2e241ff5753ad23b7d940e458eb7f984053913fffeb0be4"
+metafile = true
+
+[[files]]
+file = "plugins/perworldinventory.pw.toml"
+hash = "271374523aa58f009721079e0bc989e361c4c5451373fe41ae021ae2fbf3d4a1"
+metafile = true
+
+[[files]]
+file = "plugins/skinsrestorer.pw.toml"
+hash = "3cb8a5d4301dc667ea9f588e8e815e2954c470f0971568b708a092cbdb1dd9c2"
+metafile = true
+
+[[files]]
+file = "plugins/vault.pw.toml"
+hash = "a2b49e67c6250fb33903e19a6d2f4fd41b8e448710e4629414796ad1534f8d7e"
+metafile = true
