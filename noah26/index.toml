@@ -472,7 +472,7 @@ metafile = true
 
 [[files]]
 file = "mods/mouse-tweaks.pw.toml"
-hash = "679fa8f3b49b9ed3fbcb29d6ccdb99bce465faa01f9cec000464ac8d4fbe134f"
+hash = "04ac490362cd71c0c0d4de93c75e1e5e4c6e10ef0176c97882648c492659f4ea"
 metafile = true
 
 [[files]]
@@ -482,7 +482,7 @@ metafile = true
 
 [[files]]
 file = "mods/oculus.pw.toml"
-hash = "f83b253ca6a8e6f2f847952704da0e1fb00e65cbb10b7c9cb15d1a1780618da0"
+hash = "5eb2954707d21342e2abb296d2a905d9a6785e1c57e8a8a6fbd788beaeb461fc"
 metafile = true
 
 [[files]]
@@ -753,4 +753,14 @@ metafile = true
 [[files]]
 file = "mods/yungs-extras.pw.toml"
 hash = "cbc4a42265c7235d95f596f4d03819d868e002c2b175f2f6bd30420416a7cef2"
+metafile = true
+
+[[files]]
+file = "shaderpacks/complementary-reimagined.pw.toml"
+hash = "5f70f2a697bf4ac93012f4008c086bd130b352d6db952e22e63572269b61b094"
+metafile = true
+
+[[files]]
+file = "shaderpacks/complementary-unbound.pw.toml"
+hash = "4f6caa252f610c421b67fb99e5a28dcadcf0aee468fb3674bee46cb5fd242ce9"
 metafile = true
