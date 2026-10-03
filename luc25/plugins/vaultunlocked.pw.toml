@@ -1,0 +1,13 @@
+name = "VaultUnlocked"
+filename = "VaultUnlocked-2.10.0.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/ayRaM8J7/versions/iwC7UeBt/VaultUnlocked-2.10.0.jar"
+hash-format = "sha512"
+hash = "5d4846bbeb3650f3b113668a21f7e5ff0dc08ade32daa776c7a96a85a42bba4db807af5e96d2780d29a66d7cd49d1f9122c0e14e13ea8f4f4ad40320f692389d"
+
+[update]
+[update.modrinth]
+mod-id = "ayRaM8J7"
+version = "iwC7UeBt"

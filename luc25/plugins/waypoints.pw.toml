@@ -1,0 +1,13 @@
+name = "Waypoints"
+filename = "waypoints-4.5.6.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/1c2olKOU/versions/NXLLcp4a/waypoints-4.5.6.jar"
+hash-format = "sha512"
+hash = "da14e04fdc0628567fc5eb98f0f5869c95ab4af0e8942788971602fefe604f1b450835255ae6ad5608d83be470cd9f97ac6022a9d266512499cc4307702ea5e1"
+
+[update]
+[update.modrinth]
+mod-id = "1c2olKOU"
+version = "NXLLcp4a"

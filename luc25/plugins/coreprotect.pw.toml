@@ -1,0 +1,13 @@
+name = "CoreProtect"
+filename = "CoreProtect-22.4.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/Lu3KuzdV/versions/llmrc4cl/CoreProtect-22.4.jar"
+hash-format = "sha512"
+hash = "0874f449965ec28a1ec1453a4aafc6da80e1647ec46b87559540d57047603f6b07f83d69b602f049475756e38f9148dbd964f668341cbb30b7ebd09345c97aad"
+
+[update]
+[update.modrinth]
+mod-id = "Lu3KuzdV"
+version = "llmrc4cl"

@@ -1,0 +1,13 @@
+name = "CustomNPCs"
+filename = "customnpcs-1.7.4.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/ptXUpAzg/versions/9tMZCC1p/customnpcs-1.7.4.jar"
+hash-format = "sha512"
+hash = "83d9df00ceac5ba1dfa6ab4852907cfb36d14c3a609395c69d13561282dd2378ef257610f215d2fdc02d377d02cf1f291996c21f12329642789f7b3a8c0d91d1"
+
+[update]
+[update.modrinth]
+mod-id = "ptXUpAzg"
+version = "9tMZCC1p"

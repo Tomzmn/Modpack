@@ -1,0 +1,13 @@
+name = "ViaRewind"
+filename = "ViaRewind-4.0.7.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/TbHIxhx5/versions/eiOdKpT7/ViaRewind-4.0.7.jar"
+hash-format = "sha512"
+hash = "dca5d9f96895e237f222db53ab701645405afe7383b7a432f304cb9ee39b52b7cf0725ccd4b1b6a44e0005493aa5eb47d3a43a578f56e5f38983c18975b31479"
+
+[update]
+[update.modrinth]
+mod-id = "TbHIxhx5"
+version = "eiOdKpT7"

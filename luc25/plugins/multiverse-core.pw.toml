@@ -1,0 +1,13 @@
+name = "Multiverse-Core"
+filename = "multiverse-core-4.3.16.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/3wmN97b8/versions/eXnRWJUj/multiverse-core-4.3.16.jar"
+hash-format = "sha512"
+hash = "ba0efb4c7db38947eea579dcaeac6922483554f920b9650636a439a8335752690871564aa2288e2900d0223348e84b4065e954a5ac5fc09ba98120348ccc9b94"
+
+[update]
+[update.modrinth]
+mod-id = "3wmN97b8"
+version = "eXnRWJUj"

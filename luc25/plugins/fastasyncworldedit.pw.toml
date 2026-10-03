@@ -1,0 +1,13 @@
+name = "FastAsyncWorldEdit"
+filename = "FastAsyncWorldEdit-Paper-2.13.1.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/z4HZZnLr/versions/o8Ytdhc5/FastAsyncWorldEdit-Paper-2.13.1.jar"
+hash-format = "sha512"
+hash = "76e1fe00eef22a9e0f6296e81f2a4e7a7b3020160f2e5828d1b144959b3904fe1b603ebe585f3a5094f9061a661622077c31a255b8a94f520b80f760d48fc33c"
+
+[update]
+[update.modrinth]
+mod-id = "z4HZZnLr"
+version = "o8Ytdhc5"

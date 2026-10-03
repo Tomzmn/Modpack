@@ -1,0 +1,13 @@
+name = "Purpur Bars"
+filename = "PurpurBars-1.2-SNAPSHOT.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/D9LfFRYE/versions/SMN3FOW8/PurpurBars-1.2-SNAPSHOT.jar"
+hash-format = "sha512"
+hash = "ab852cb27fb46175fc645c8ef0a5ed23f9eee5f00f56ec5bbe326548b1bfba3a49214e15e2f5c23e4944c1b74823f901201832e6351b3b1049e6bf6c8d7a3a17"
+
+[update]
+[update.modrinth]
+mod-id = "D9LfFRYE"
+version = "SMN3FOW8"
