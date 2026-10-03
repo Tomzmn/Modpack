@@ -1,0 +1,13 @@
+name = "LagFixer"
+filename = "LagFixer-1.7.1.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/fD1X4Kwd/versions/vfYwcjEI/LagFixer-1.7.1.jar"
+hash-format = "sha512"
+hash = "fa20a08092a4d054d19d272486b69b7493c64f37d1d8922241361f4b6b7e0d2d0fb2da0c9ea4fa2e23d13e41098315842dd52c8c1a2fac2a16e8b52f10df14bd"
+
+[update]
+[update.modrinth]
+mod-id = "fD1X4Kwd"
+version = "vfYwcjEI"

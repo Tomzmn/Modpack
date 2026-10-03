@@ -17,7 +17,7 @@ elle réveille le serveur, met les mods à jour, puis connecte le jeu.
 
 | Serveur | Adresse | Contenu | Mis à jour | Instance Prism |
 |---|---|---|---|---|
-| **captive25** | `captive25.tomz.fr` | Minecraft 1.21.10 · sans plugin | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/captive25) | [captive25.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-captive25/captive25.zip) |
+| **captive25** | `captive25.tomz.fr` | Minecraft 1.21.10 · 6 plugins | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/captive25) | [captive25.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-captive25/captive25.zip) |
 | **jarry20** | `jarry20.tomz.fr` | Minecraft 1.15.2 · sans plugin | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/jarry20) | [jarry20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-jarry20/jarry20.zip) |
 | **jarry26** | `jarry26.tomz.fr` | Minecraft 1.21.1 · NeoForge 21.1.219 · 25 mods | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/jarry26) | [jarry26.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-jarry26/jarry26.zip) |
 | **luc25** | `luc25.tomz.fr` | Minecraft 1.21.4 · 21 plugins | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/luc25) | [luc25.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-luc25/luc25.zip) |
