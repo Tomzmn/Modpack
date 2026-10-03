@@ -1,0 +1,13 @@
+name = "ViaVersion"
+filename = "ViaVersion-5.12.0.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar"
+hash-format = "sha512"
+hash = "2dfe562109179f08685dc84a66aedf7c810592223b5287b6355ba1e741d1737d015ca0c444b4bc01e5db2a4b10549d5028bf2e3f3337219ded709e44b579a4d8"
+
+[update]
+[update.modrinth]
+mod-id = "P1OZGk5p"
+version = "FaishMnD"

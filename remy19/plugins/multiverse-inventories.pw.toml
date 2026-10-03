@@ -1,0 +1,13 @@
+name = "Multiverse-Inventories"
+filename = "multiverse-inventories-5.3.6.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/qvdtDX3s/versions/86s1EwyC/multiverse-inventories-5.3.6.jar"
+hash-format = "sha512"
+hash = "e587c873e1a01a48d79dabadc629113d68fe11240b85c970f481b62ebfcf5f8c3adffa9c5a5c601db0437b5c873312a02492a191ac8504a66ce4fed48a0d7438"
+
+[update]
+[update.modrinth]
+mod-id = "qvdtDX3s"
+version = "86s1EwyC"
