@@ -52,7 +52,7 @@ metafile = true
 
 [[files]]
 file = "plugins/skinsrestorer.pw.toml"
-hash = "3cb8a5d4301dc667ea9f588e8e815e2954c470f0971568b708a092cbdb1dd9c2"
+hash = "e7ce01f03bcaf4caa22743cf4ded9a47712473910b75cecd76e92ee4fdc089e3"
 metafile = true
 
 [[files]]
@@ -62,12 +62,12 @@ metafile = true
 
 [[files]]
 file = "plugins/worldedit.pw.toml"
-hash = "bd610f361ccc1e290b2c3d7e707a92252ecd068dfdc82c5b7aa427c430b83557"
+hash = "f1ad445b9c8ef1459d5a25365f176f8eef66b6ace160dc7fc72c7c62525f4d08"
 metafile = true
 
 [[files]]
 file = "plugins/worldguard.pw.toml"
-hash = "8f0d5427a089ca792f39f1aa818f7aff756c404bfc3223a67c433ceaf637208c"
+hash = "5ffd05c03f125418bdde207e1ae599245dbd2fa564def740a7438dd77c4c724d"
 metafile = true
 
 [[files]]
