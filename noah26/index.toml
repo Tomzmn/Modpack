@@ -296,11 +296,6 @@ hash = "ce26e71a01dc450b60d754bc44675915e8a54f2bb6db215a76a21e43fad3d44e"
 metafile = true
 
 [[files]]
-file = "mods/grieflogger.pw.toml"
-hash = "6406896463cb7c34d86cbe583b6fb2852c2306129d9770e403d817ac451a81a4"
-metafile = true
-
-[[files]]
 file = "mods/guideme.pw.toml"
 hash = "2e42b3a809ec9b027e23714e01c255fe5111a9d4cd58fad114dd0f2aa75c0d7e"
 metafile = true
