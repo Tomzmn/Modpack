@@ -1,0 +1,8 @@
+name = "ClearLag"
+filename = "Clearlag.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tom20/fichiers/Clearlag.jar"
+hash-format = "sha512"
+hash = "da2a5c7eaed3190172e7e5ca44ec48ca32e99f70dc6b72b0d44f22d3648d4a19730314c2ceb70288f4a1b8e93b48bcbd890c74f7dc2e2db447de9280ca58f238"

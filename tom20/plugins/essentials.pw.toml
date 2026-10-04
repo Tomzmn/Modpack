@@ -1,0 +1,8 @@
+name = "Essentials"
+filename = "Essentials.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tom20/fichiers/Essentials.jar"
+hash-format = "sha512"
+hash = "eda6a9e871a373a25e13cec31239d887423e029e5589e20a356ce15af140a6840cffa4b960d8dce01dbcbfa0fec2f1e09fff68ab86620d7d37bff5add3b4380e"

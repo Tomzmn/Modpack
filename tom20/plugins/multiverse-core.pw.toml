@@ -1,0 +1,8 @@
+name = "Multiverse-Core"
+filename = "Multiverse-Core-2.5.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tom20/fichiers/Multiverse-Core-2.5.jar"
+hash-format = "sha512"
+hash = "c0aa88a35399ea5ee571bbe8e0f7c7462d85dd6558e353c5d112f0f926cfab0bf5913a0f843b1ee5efba14904e6fa845d2bba7584d599b33190a28ae5b7a9a67"
