@@ -1,0 +1,76 @@
+hash-format = "sha256"
+
+[[files]]
+file = "plugins/advancedantixray.pw.toml"
+hash = "b0789528975a0967c71789dc1012e89c80510c46af3f4ccb415aef5338f3ab93"
+metafile = true
+
+[[files]]
+file = "plugins/bukkitcompat.pw.toml"
+hash = "30b0aa2460af5416c15c7aeecd20fccd048799f0394f1324fdec8cc160e6e67c"
+metafile = true
+
+[[files]]
+file = "plugins/clearlag.pw.toml"
+hash = "8da62ce4c17c5f6209637861cea007621be3801d47eabfca0254d48a37ab4c23"
+metafile = true
+
+[[files]]
+file = "plugins/coreprotect.pw.toml"
+hash = "dce556bc6d8f15546986d224388900990676201603df62cffcf3d5244ca8e056"
+metafile = true
+
+[[files]]
+file = "plugins/essentials.pw.toml"
+hash = "ec870319edc83195a903eeb7b765db59325ba2cddfb2103dc00fee04f6a5d54f"
+metafile = true
+
+[[files]]
+file = "plugins/essentialsantibuild.pw.toml"
+hash = "c113f48570bfba3c7d2555baf9c4f78d9992c60695c7e1979fbeb10c5909efdc"
+metafile = true
+
+[[files]]
+file = "plugins/essentialschat.pw.toml"
+hash = "1701e6b9862aed69dbaf54f7daa9e6b2c627da55895d928b0ce06212c414fc75"
+metafile = true
+
+[[files]]
+file = "plugins/essentialsprotect.pw.toml"
+hash = "b17feaa20c0677645c7aa7770bdb843183233f33e550585d14c0f1bbb7f0e298"
+metafile = true
+
+[[files]]
+file = "plugins/essentialsspawn.pw.toml"
+hash = "6ae48a7ec79f42aa11ba1a06b96e8a8c3c9799bbad23e90d0e7a8d135a2d2417"
+metafile = true
+
+[[files]]
+file = "plugins/lockette.pw.toml"
+hash = "bfad5079ad042b23b061308df8dc540fe74abf2c4120e4b831820feff096fc04"
+metafile = true
+
+[[files]]
+file = "plugins/multiverse-core.pw.toml"
+hash = "ce567854afa05e231b91a645ad709418271dabf58c60f7cb334bf127ad25afdd"
+metafile = true
+
+[[files]]
+file = "plugins/permissionsex.pw.toml"
+hash = "462642b6800e9119d23627534e8ecc263aef3e40214151bbaef422cd97d77a09"
+metafile = true
+
+[[files]]
+file = "plugins/vault.pw.toml"
+hash = "89c1599a471b2143da583132e194cfe7254e8c6bc6ab20c04a5e20ccffa4ab93"
+metafile = true
+
+[[files]]
+file = "plugins/worldedit.pw.toml"
+hash = "ae0012fa039b0ca14f072f85e2ef8537038c9e6ab7382cd6d5b3e15014be6ddd"
+metafile = true
+
+[[files]]
+file = "plugins/worldguard.pw.toml"
+hash = "97e90c45b9356094bfccdcd2b324953122ecadacfee44925064da44f7cb7fe7a"
+metafile = true

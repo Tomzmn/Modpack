@@ -1,0 +1,8 @@
+name = "Lockette"
+filename = "Lockette.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tomwe20/fichiers/Lockette.jar"
+hash-format = "sha512"
+hash = "4c38edc75f1f717a1167082ab3c5c4016ee0abb262f5772f93e8b71b75b07bd7dbb5df637a103ab6dd5c56f7fa7ac3d1f010c63214df9aaf495dcd5b8a719d52"

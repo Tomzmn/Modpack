@@ -1,0 +1,8 @@
+name = "PermissionsEx"
+filename = "PermissionsEx-1.22.10.jar"
+side = "server"
+
+[download]
+url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tomwe20/fichiers/PermissionsEx-1.22.10.jar"
+hash-format = "sha512"
+hash = "1fa3313f81c6cfc69d39c325964eabc55d8f91e4a49dfe8619c144cbb30b9aedab317ba7ab4cfd7da18da57aa3b095027755ee70359e4b7d984a4f116c70eaef"
