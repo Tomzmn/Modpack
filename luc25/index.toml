@@ -81,21 +81,6 @@ hash = "a6229c06b66f420a47144e72c7265bcbfad54cf9294ebf931a8092a10cbfba13"
 metafile = true
 
 [[files]]
-file = "plugins/viabackwards.pw.toml"
-hash = "ce0b806e47bee52c3e736454f1440e3d3f08ce653fdc9570c28aa494889ebd22"
-metafile = true
-
-[[files]]
-file = "plugins/viarewind.pw.toml"
-hash = "026cdeaa92f5800063d2eb79ad65dc89baf933e85efa9bd44602093313d05ae0"
-metafile = true
-
-[[files]]
-file = "plugins/viaversion.pw.toml"
-hash = "eabcf273e86cfb25443f33dd874178974649ab5bff142d83197347066d275940"
-metafile = true
-
-[[files]]
 file = "plugins/waypoints.pw.toml"
 hash = "4a6e7bccd5eed02f49efe22ab19afee92ee65c133c1c0eef2eedfb9fde84327c"
 metafile = true
