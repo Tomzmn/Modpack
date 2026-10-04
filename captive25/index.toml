@@ -14,18 +14,3 @@ metafile = true
 file = "plugins/lagfixer.pw.toml"
 hash = "403dafa34f7c0898b644c2559198bbd542d3d73e5b5b927dd9562524cf8565d7"
 metafile = true
-
-[[files]]
-file = "plugins/viabackwards.pw.toml"
-hash = "15911b64a5d18cfefaa823ddea28ad8a6b588c1f55ac16fd838e1b0d75598ebd"
-metafile = true
-
-[[files]]
-file = "plugins/viarewind.pw.toml"
-hash = "5ca2fe30d93609d731bce6e0649a3cef0d0031b166c114ef79b92c4994137361"
-metafile = true
-
-[[files]]
-file = "plugins/viaversion.pw.toml"
-hash = "b35e0a56e21743a6df38c9b3775eb77cee61537aef67bac81fda4894e4d47a21"
-metafile = true
