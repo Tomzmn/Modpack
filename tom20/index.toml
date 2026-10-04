@@ -67,7 +67,7 @@ metafile = true
 
 [[files]]
 file = "plugins/worldedit.pw.toml"
-hash = "ae0012fa039b0ca14f072f85e2ef8537038c9e6ab7382cd6d5b3e15014be6ddd"
+hash = "57dfeca02e83db6aa7efd8b395d649e8e3b3bb56f27f816b7eb0b44d4f59a4a0"
 metafile = true
 
 [[files]]
