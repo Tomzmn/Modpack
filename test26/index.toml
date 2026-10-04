@@ -14,8 +14,3 @@ metafile = true
 file = "mods/proxy-compatible-forge.pw.toml"
 hash = "bf061fa308a80f91cc8622ff6ee20c3e0cb23b61760b841e4e30f65ca0b78161"
 metafile = true
-
-[[files]]
-file = "plugins/veinminer.pw.toml"
-hash = "5dc4dec2d6c9e399a1430b0d6179baa00de3a2269cf82863a49e4e28e8baf2de"
-metafile = true
