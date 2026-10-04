@@ -11,11 +11,6 @@ hash = "30b0aa2460af5416c15c7aeecd20fccd048799f0394f1324fdec8cc160e6e67c"
 metafile = true
 
 [[files]]
-file = "plugins/clearlag.pw.toml"
-hash = "8da62ce4c17c5f6209637861cea007621be3801d47eabfca0254d48a37ab4c23"
-metafile = true
-
-[[files]]
 file = "plugins/coreprotect.pw.toml"
 hash = "dce556bc6d8f15546986d224388900990676201603df62cffcf3d5244ca8e056"
 metafile = true

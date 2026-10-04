@@ -26,7 +26,7 @@ elle réveille le serveur, met les mods à jour, puis connecte le jeu.
 | **remy19** | `remy19.tomz.fr` | Minecraft 1.21.10 · 12 plugins | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/remy19) | [remy19.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-remy19/remy19.zip) |
 | **remy20** | `remy20.tomz.fr` | Minecraft 1.21.10 · 12 plugins | [03/10/2026](https://github.com/Tomzmn/Modpack/commits/main/remy20) | [remy20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-remy20/remy20.zip) |
 | **tom20** | `tom20.tomz.fr` | Minecraft 1.7.10 · 15 plugins | [04/10/2026](https://github.com/Tomzmn/Modpack/commits/main/tom20) | [tom20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-tom20/tom20.zip) |
-| **tomwe20** | `tomwe20.tomz.fr` | Minecraft 1.7.10 · 15 plugins | [04/10/2026](https://github.com/Tomzmn/Modpack/commits/main/tomwe20) | [tomwe20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-tomwe20/tomwe20.zip) |
+| **tomwe20** | `tomwe20.tomz.fr` | Minecraft 1.7.10 · 14 plugins | [04/10/2026](https://github.com/Tomzmn/Modpack/commits/main/tomwe20) | [tomwe20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-tomwe20/tomwe20.zip) |
 
 <!-- /sommaire -->
 
