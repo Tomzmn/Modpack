@@ -1,0 +1,13 @@
+name = "WorldGuard"
+filename = "worldguard-bukkit-7.0.1.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/DKY9btbd/versions/K2VwHXRd/worldguard-bukkit-7.0.1.jar"
+hash-format = "sha512"
+hash = "ff634ef61601b8d4e10eeeccc174f292a148f907ae593e20cb12f97eba5e6e448e47423cb887e4f361d8b62471f397a5bed8ab5e97ddd3ed2f57587cbd507187"
+
+[update]
+[update.modrinth]
+mod-id = "DKY9btbd"
+version = "K2VwHXRd"

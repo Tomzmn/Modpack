@@ -59,3 +59,18 @@ metafile = true
 file = "plugins/vault.pw.toml"
 hash = "a2b49e67c6250fb33903e19a6d2f4fd41b8e448710e4629414796ad1534f8d7e"
 metafile = true
+
+[[files]]
+file = "plugins/worldedit.pw.toml"
+hash = "bd610f361ccc1e290b2c3d7e707a92252ecd068dfdc82c5b7aa427c430b83557"
+metafile = true
+
+[[files]]
+file = "plugins/worldguard.pw.toml"
+hash = "8f0d5427a089ca792f39f1aa818f7aff756c404bfc3223a67c433ceaf637208c"
+metafile = true
+
+[[files]]
+file = "plugins/worldguardextraflags.pw.toml"
+hash = "a65fa9d5cbe6cab71cff0c7ae663cf917b44c6a5f5bb945b25a9a9ae2697507a"
+metafile = true
