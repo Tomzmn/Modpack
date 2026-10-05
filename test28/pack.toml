@@ -1,0 +1,13 @@
+name = "test28"
+author = "Tomzmn"
+version = "2026.10.05"
+pack-format = "packwiz:1.1.0"
+
+[index]
+file = "index.toml"
+hash-format = "sha256"
+hash = "90bb5c512b382e46a73a9dcbc5459d539f16cae8fb150282ba32d17e32bf7c9f"
+
+[versions]
+forge = "52.1.16"
+minecraft = "1.21.1"
