@@ -1,0 +1,13 @@
+name = "Chunky"
+filename = "Chunky-Bukkit-1.4.40.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/fALzjamp/versions/P3y2MXnd/Chunky-Bukkit-1.4.40.jar"
+hash-format = "sha512"
+hash = "b017fd180141b5c14c38dfb10128d5f5a1072a68ff93ee486d4465953331f5851f09a09b4a159364837a95d192198d8e9885ce39c46eed32dacbf1fd65c6f30f"
+
+[update]
+[update.modrinth]
+mod-id = "fALzjamp"
+version = "P3y2MXnd"

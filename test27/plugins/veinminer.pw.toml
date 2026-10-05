@@ -1,0 +1,13 @@
+name = "VeinMiner"
+filename = "veinminer-paper-2.11.2+1.21.1.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/OhduvhIc/versions/SYe1lx2s/veinminer-paper-2.11.2%2B1.21.1.jar"
+hash-format = "sha512"
+hash = "052564f4cbb4899a1b453ad5ccdaf1a51e00fb9f02e2a0d3b01fdee844d9e9718689d25ca10edb32ae249872c0fc81c95f47bfd81fab48ab03b5c7359dc454a6"
+
+[update]
+[update.modrinth]
+mod-id = "OhduvhIc"
+version = "SYe1lx2s"
