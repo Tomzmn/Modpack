@@ -1,6 +1,6 @@
 name = "jarry26"
 author = "Tomzmn"
-version = "2026.10.03"
+version = "2026.10.05"
 pack-format = "packwiz:1.1.0"
 
 [index]
@@ -10,4 +10,4 @@ hash = "7e0f52fb2d3ffe310fd6c56c0ee56ec23effacd529fe016a16b5075fb98ccfbf"
 
 [versions]
 minecraft = "1.21.1"
-neoforge = "21.1.219"
+neoforge = "21.1.255"
