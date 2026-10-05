@@ -1,6 +1,11 @@
 hash-format = "sha256"
 
 [[files]]
+file = "mods/all-in-one-veinminer.pw.toml"
+hash = "8a1344dddf2eb4a653d7f9d97197fabcb285cf52fc36d28ae84806aa07d9d993"
+metafile = true
+
+[[files]]
 file = "mods/jei.pw.toml"
 hash = "95425dbf3784bc50133ef07e3c8317cc13d1bd2ec8d1abe09c620c692d001c9c"
 metafile = true
@@ -8,6 +13,11 @@ metafile = true
 [[files]]
 file = "mods/mezzconfig.pw.toml"
 hash = "72fa817bad9398d071c7ccf201bef61d1aa6a9e43e05381a183ba97ab76d0774"
+metafile = true
+
+[[files]]
+file = "mods/mouse-tweaks.pw.toml"
+hash = "9838bebc4fb1fd59a6bcdf68bd5729cfb9cd51bda984e182fa0b990fd4664ac6"
 metafile = true
 
 [[files]]

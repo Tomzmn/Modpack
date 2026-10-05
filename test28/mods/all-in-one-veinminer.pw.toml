@@ -1,0 +1,13 @@
+name = "All-in-One VeinMiner & TreeFelle"
+filename = "All-in-One-VeinMiner-TreeFelle-1.1.8.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/nUay74Bn/versions/S266rE0X/All-in-One-VeinMiner-TreeFelle-1.1.8.jar"
+hash-format = "sha512"
+hash = "249e33cb9a940f65ab3113ec1c60e320743d49accd03a5d84b2dc9a33d8d62249f82b7eb4881cb1f4723c36b4b6e430726aa480254e9058a4897f090c8292670"
+
+[update]
+[update.modrinth]
+mod-id = "nUay74Bn"
+version = "S266rE0X"
