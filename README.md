@@ -25,7 +25,6 @@ elle réveille le serveur, met les mods à jour, puis connecte le jeu.
 | **noah26** | `noah26.tomz.fr` | Minecraft 1.20.1 · Forge 47.4.20 · 151 mods · 3 shaders | [05/10/2026](https://github.com/Tomzmn/Modpack/commits/main/noah26) | [noah26.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-noah26/noah26.zip) |
 | **remy19** | `remy19.tomz.fr` | Minecraft 1.21.10 · 10 plugins | [04/10/2026](https://github.com/Tomzmn/Modpack/commits/main/remy19) | [remy19.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-remy19/remy19.zip) |
 | **remy20** | `remy20.tomz.fr` | Minecraft 1.21.10 · 10 plugins | [04/10/2026](https://github.com/Tomzmn/Modpack/commits/main/remy20) | [remy20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-remy20/remy20.zip) |
-| **test28** | `test28.tomz.fr` | Minecraft 1.21.1 · Forge 52.1.16 · 5 mods · 1 plugin · 1 shader | [05/10/2026](https://github.com/Tomzmn/Modpack/commits/main/test28) | [test28.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-test28/test28.zip) |
 | **tom20** | hors du proxy | Minecraft 1.7.10 · 15 plugins | [04/10/2026](https://github.com/Tomzmn/Modpack/commits/main/tom20) | [tom20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-tom20/tom20.zip) |
 | **tomwe20** | hors du proxy | Minecraft 1.7.10 · 14 plugins | [04/10/2026](https://github.com/Tomzmn/Modpack/commits/main/tomwe20) | [tomwe20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-tomwe20/tomwe20.zip) |
 
