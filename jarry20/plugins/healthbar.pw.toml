@@ -1,8 +1,0 @@
-name = "HealthBar"
-filename = "HealthBar.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/HealthBar.jar"
-hash-format = "sha512"
-hash = "63a9aced5b03a9a69532f58ff811deeaf94d10c964e553571c669c49e3281e64518d747d87a70aad32d036cfca6e369b1639f05761aff17a02399342e8349ef2"

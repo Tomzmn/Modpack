@@ -1,8 +1,0 @@
-name = "PerWorldInventory"
-filename = "perworldinventory-kt-2.3.1.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/perworldinventory-kt-2.3.1.jar"
-hash-format = "sha512"
-hash = "ab0e83457a919c2d915dedbc09e8d77db712227be40a95377b8ed71612c4d1b48371cb987c4d0f1863b476b3a79d8bd2ab91ef061ce3cb7839822d8ea499d2a4"

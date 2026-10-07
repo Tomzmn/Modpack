@@ -1,8 +1,0 @@
-name = "dynmap"
-filename = "Dynmap-3.0-beta-10-spigot.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/Dynmap-3.0-beta-10-spigot.jar"
-hash-format = "sha512"
-hash = "3e4a50432a1cbf1717e6f006ad7540eaff50415ad74e01f35d3ef65a534561dd3b779547cdf795a74830d567eef1ef74d600c8a739318d893306b517fb649918"

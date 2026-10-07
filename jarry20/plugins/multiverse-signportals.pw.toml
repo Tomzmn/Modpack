@@ -1,8 +1,0 @@
-name = "Multiverse-SignPortals"
-filename = "Multiverse-SignPortals-4.0.0.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/Multiverse-SignPortals-4.0.0.jar"
-hash-format = "sha512"
-hash = "b54c7c3fbf59e0f01c08f2b9243fb468f9cde4082175516a089108e6ff21ede54ede2be13a84f88b038a10f798669bd6a00dbab9c05ceba51de42ba3ef2a3ec3"

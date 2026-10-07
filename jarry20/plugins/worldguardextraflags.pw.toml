@@ -1,8 +1,0 @@
-name = "WorldGuardExtraFlags"
-filename = "WorldGuardExtraFlags.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/WorldGuardExtraFlags.jar"
-hash-format = "sha512"
-hash = "46e4cc15d0baa19640fa951be14100f1b7346bef3c4b9141c1ac48b0f06fcebf833d1217fd82524ce729264ae3a7b7f3e26cfb65d67b0fda18eb28960b8b81a4"

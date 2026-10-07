@@ -1,8 +1,0 @@
-name = "Essentials"
-filename = "EssentialsX-2.17.0.3.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/EssentialsX-2.17.0.3.jar"
-hash-format = "sha512"
-hash = "458a7ec5335c7bcd771f75187df5e1d5a6eb295d151232c4c9b41c4e906df68cfa8bc0f733d28dde8777a5120b8772bea192e6157dca86eb7215397af8571e89"

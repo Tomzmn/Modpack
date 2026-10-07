@@ -1,8 +1,0 @@
-name = "PermissionsEx"
-filename = "PermissionsEx-1.23.4.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/jarry20/fichiers/PermissionsEx-1.23.4.jar"
-hash-format = "sha512"
-hash = "6dacc62fd40b76e60787293df32a64d9d2569f88e28cecabd26c2f7fb85f94f0bf226d3f760588b8a4197d42f49b850378bf34d865a825721fac4baba6d70f26"
