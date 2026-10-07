@@ -1,8 +1,0 @@
-name = "EssentialsSpawn"
-filename = "EssentialsSpawn.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tomwe20/fichiers/EssentialsSpawn.jar"
-hash-format = "sha512"
-hash = "29d64b33f4f5974c016bae27e4da75fbd3cd6a21a87666303f4ed6b7b0d7fb5f99e71ea1dac54c8fcdfa6a0d3b6e3916cfd45e03216fd783b31438725cff26f4"

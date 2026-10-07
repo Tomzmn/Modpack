@@ -1,12 +1,12 @@
 name = "tomwe20"
 author = "Tomzmn"
-version = "2026.10.04"
+version = "2026.10.07"
 pack-format = "packwiz:1.1.0"
 
 [index]
 file = "index.toml"
 hash-format = "sha256"
-hash = "03a8a49e5d574f66a2aca6819cd71a88a3c44ec23be99b2b778f1f9e24eeb914"
+hash = "7b81c9e9d9e6e21a9865a2dded0dfd77e7683d679b98fe5b0114eaed9a31f17e"
 
 [versions]
 minecraft = "1.7.10"

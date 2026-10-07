@@ -1,8 +1,0 @@
-name = "Vault"
-filename = "Vault.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tomwe20/fichiers/Vault.jar"
-hash-format = "sha512"
-hash = "8eb68cb97e1b3795f52d4ff9e19d2ea9fe723ccb99c3e2538637e241a9b4c76ed28f80d3e02fcb694ffcf72ec19fdb10ceabafc1183c8bff306b1f527a66b0d3"

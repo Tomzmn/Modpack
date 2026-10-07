@@ -1,8 +1,0 @@
-name = "EssentialsChat"
-filename = "EssentialsChat.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tomwe20/fichiers/EssentialsChat.jar"
-hash-format = "sha512"
-hash = "40bcb70236bc87a0d3f6fc5fa5ec7becbc212920b922c8730412b851135ff29c8145a228121c3d714b385ca05ac079342121fc5fa7ec41181f5326d5fd704513"

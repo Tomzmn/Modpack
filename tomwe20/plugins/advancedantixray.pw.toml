@@ -1,8 +1,0 @@
-name = "AdvancedAntiXray"
-filename = "AdvancedAntiXray.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tomwe20/fichiers/AdvancedAntiXray.jar"
-hash-format = "sha512"
-hash = "003f6aae599e93c6ab27c9ee0169d0e53a233df7db0434469ecc7656af66dbe00b8ed88510b445a7f5e433be37d370f02c346a00b5b8a9ecab6598462a3fed63"

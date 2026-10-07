@@ -1,8 +1,0 @@
-name = "EssentialsAntiBuild"
-filename = "EssentialsAntiBuild.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tomwe20/fichiers/EssentialsAntiBuild.jar"
-hash-format = "sha512"
-hash = "2b520bf518a584c6adbc47909c5ea95c3bce0d2590564cd301c374fd3de1618ebd247c48969d9b73ce068f534a4d594a581e79a4ef7242fcd0093637d2fcaf10"
