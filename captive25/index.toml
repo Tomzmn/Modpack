@@ -1,16 +1,2 @@
 hash-format = "sha256"
-
-[[files]]
-file = "plugins/coreprotect.pw.toml"
-hash = "39944f3defe2049232b2205047ed6598321597be56c86196c545cc5fce821072"
-metafile = true
-
-[[files]]
-file = "plugins/essentialsx.pw.toml"
-hash = "576ca815d2ab636aee66c63722d632ad0a56eda116142095500ecc82643eff90"
-metafile = true
-
-[[files]]
-file = "plugins/lagfixer.pw.toml"
-hash = "403dafa34f7c0898b644c2559198bbd542d3d73e5b5b927dd9562524cf8565d7"
-metafile = true
+files = []
