@@ -1,8 +1,0 @@
-name = "EssentialsProtect"
-filename = "EssentialsProtect.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tom20/fichiers/EssentialsProtect.jar"
-hash-format = "sha512"
-hash = "1e39f6418cf6e0db84176598ae68aeac3a99e42c09815f11840945541afd811c01f2cc7bae93b85a4eef1bb3b61495fe6825dd653a4936428682ed7d56c21e07"

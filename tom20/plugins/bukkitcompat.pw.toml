@@ -1,8 +1,0 @@
-name = "BukkitCompat"
-filename = "MCMA_compat.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tom20/fichiers/MCMA_compat.jar"
-hash-format = "sha512"
-hash = "ba45a8acfaf9781812b2932909c90bbf3612309ba014ef2418f1fbb9d95ebd3965e4e476e621e302b8b926a099e95818aeaab1a1e4dd54fbda3263e9962ff082"

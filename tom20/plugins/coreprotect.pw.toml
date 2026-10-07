@@ -1,8 +1,0 @@
-name = "CoreProtect"
-filename = "CoreProtect_2.10.0.jar"
-side = "server"
-
-[download]
-url = "https://raw.githubusercontent.com/Tomzmn/Modpack/main/tom20/fichiers/CoreProtect_2.10.0.jar"
-hash-format = "sha512"
-hash = "1d364f402c6c233a35b3fa69711b4cad48cef8015f2ecdc9c09c237a05fbf375b8c95652bf34da9c71e96306cb377f650852c45dcd3380b4378b82ff82919596"
