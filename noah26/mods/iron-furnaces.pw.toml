@@ -1,13 +1,13 @@
 name = "Iron Furnaces"
-filename = "ironfurnaces-1.20.1-4.1.6.jar"
+filename = "ironfurnaces-1.20.1-4.1.8.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/yPlaLxD1/versions/fGEswUMR/ironfurnaces-1.20.1-4.1.6.jar"
+url = "https://cdn.modrinth.com/data/yPlaLxD1/versions/KHAcRQwi/ironfurnaces-1.20.1-4.1.8.jar"
 hash-format = "sha512"
-hash = "1ccccbc2b81f6580424e63e910df53c68bd5ef1fa952a57536b73b88a45466e5105585e0db1e1fa9ad2e764da092341bad1deb474d781edcff83f54e3c432402"
+hash = "72b1a549f74bd93054baa78619f6ac8b5d7c6a6df7565b0fcb3dcb3ae5c4d076801eae0193a76885d8db516247bb3817c7e3542eb86d69fe2dc8ad1d45e3960e"
 
 [update]
 [update.modrinth]
 mod-id = "yPlaLxD1"
-version = "fGEswUMR"
+version = "KHAcRQwi"

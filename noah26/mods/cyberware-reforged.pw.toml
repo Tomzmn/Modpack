@@ -1,13 +1,13 @@
 name = "Cyberware: Reforged"
-filename = "cyber_ware_port-1.6.1.jar"
+filename = "cyber_ware_port-1.20.1-1.7.0.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/FJab88SV/versions/dsk6gkea/cyber_ware_port-1.6.1.jar"
+url = "https://cdn.modrinth.com/data/FJab88SV/versions/vSkjIUZP/cyber_ware_port-1.20.1-1.7.0.jar"
 hash-format = "sha512"
-hash = "ebd0729be3a855fbe43a611e0b8956930bbf6442ca42844deb0e7e126dcaa4b878bc2ef53507dab66d06983cc4a903875d2be28034570dda3cf0c7855c99c024"
+hash = "9310b180c6bd968a15aed4248fe53608b1a39a8862a79033eff0411877be67e69fa60b54cd187374e4dc966ae02d294a5107d919488d7e0d24b440676e88172d"
 
 [update]
 [update.modrinth]
 mod-id = "FJab88SV"
-version = "dsk6gkea"
+version = "vSkjIUZP"
