@@ -1,12 +1,12 @@
 name = "luc25"
 author = "Tomzmn"
-version = "2026.10.04"
+version = "2026.10.07"
 pack-format = "packwiz:1.1.0"
 
 [index]
 file = "index.toml"
 hash-format = "sha256"
-hash = "3687ab2a9e9c6d7e2d52bbe5e5da67125c00ded816990624d2477094d0d5801a"
+hash = "7b81c9e9d9e6e21a9865a2dded0dfd77e7683d679b98fe5b0114eaed9a31f17e"
 
 [versions]
 minecraft = "1.21.4"
