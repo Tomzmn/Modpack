@@ -1,12 +1,12 @@
 name = "noah26"
 author = "Tomzmn"
-version = "2026.10.07"
+version = "2026.10.08"
 pack-format = "packwiz:1.1.0"
 
 [index]
 file = "index.toml"
 hash-format = "sha256"
-hash = "23cd6f188c775bde4059f74c441b761d17fea0ee3dbca072fd43f972fdfb1ab8"
+hash = "c95c93dd292e0476f3295356078aa9ef74238692b937bd468185c7ebf3748284"
 
 [versions]
 forge = "47.4.20"
