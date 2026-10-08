@@ -1,13 +1,13 @@
 name = "Macaw's Biomes O' Plenty"
-filename = "mcwbiomesoplenty-1.20.1-1.2.1.jar"
+filename = "mcwbiomesoplenty-1.20.1-1.6.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/Tanquv9C/versions/iDxDKtrx/mcwbiomesoplenty-1.20.1-1.2.1.jar"
+url = "https://cdn.modrinth.com/data/Tanquv9C/versions/H4W3gLSc/mcwbiomesoplenty-1.20.1-1.6.jar"
 hash-format = "sha512"
-hash = "694f0d5b0273293bab4e8ef5d7fe93d7e23350c6ea8e5e2aec1525060779a5b26a4d2e4ed357da6025f936d9b83bbcbd9cf96d543bea75b2ba12745abf3868e9"
+hash = "6b2a81c5aa7065828a7fcb3a2ca3d511bfe8d3b59ab9dff10a8914b484bc5e811add647d8588d1cd5dcc8c59b64fe3657abbdb6ede13ad8ed2c98c35446893bd"
 
 [update]
 [update.modrinth]
 mod-id = "Tanquv9C"
-version = "iDxDKtrx"
+version = "H4W3gLSc"

@@ -1,6 +1,7 @@
 name = "Tobacconist"
 filename = "tobacconistmod-1.4.1-1.20.1.jar"
 side = "both"
+pin = true
 
 [download]
 url = "https://cdn.modrinth.com/data/67HcuvfL/versions/cqTOm4sK/tobacconistmod-1.4.1-1.20.1.jar"

@@ -1,13 +1,13 @@
 name = "AddonsLib"
-filename = "addonslib-1.20.1-1.4.jar"
+filename = "addonslib-forge-1.20.1-1.11.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/cl5ec0Qm/versions/q3N4HHEI/addonslib-1.20.1-1.4.jar"
+url = "https://cdn.modrinth.com/data/cl5ec0Qm/versions/h34cTdny/addonslib-forge-1.20.1-1.11.jar"
 hash-format = "sha512"
-hash = "fee31ba58b1c2844e0dd827ba0fb4d1efd50fb7ff65f593dc9a5c773b9ec2b3dfb3869c00a28a0da513a1cf068feca01f30f272bc980f1a1e1ee550105a4e34d"
+hash = "7bf1c692c123ddd66af17aca6958c0ee0b13d07ef49725e6533f18ba23d8520395d561993333ff38b5e883afe02a6d0a099e6f771d89a035f1eeea497d89ac3f"
 
 [update]
 [update.modrinth]
 mod-id = "cl5ec0Qm"
-version = "q3N4HHEI"
+version = "h34cTdny"
