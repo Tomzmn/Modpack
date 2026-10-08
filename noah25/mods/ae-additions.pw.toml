@@ -1,13 +1,13 @@
 name = "AE Additions"
-filename = "AEAdditions-1.20.1-5.1.1.jar"
+filename = "AEAdditions-1.20.1-5.1.0.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/BaiPFaoT/versions/BlkC64Gz/AEAdditions-1.20.1-5.1.1.jar"
+url = "https://cdn.modrinth.com/data/BaiPFaoT/versions/lVBUCO0N/AEAdditions-1.20.1-5.1.0.jar"
 hash-format = "sha512"
-hash = "4968e56bd2077eff2f2229dd5a4e046ad46dc8043fa96c68b60da235ccef45909e16fcc61d7d9fc8c4067bef007eea4352bbd266e77cc65d3fc8d27115658fdd"
+hash = "e8214a1c4e7ab2dc40647f3cbf2d46973178e9cba0c4fe8241446bf1f62d30c1a12de583ab543547c2a198de53cca59ba15db25f556e547f40d39ad4a2fdd37f"
 
 [update]
 [update.modrinth]
 mod-id = "BaiPFaoT"
-version = "BlkC64Gz"
+version = "lVBUCO0N"

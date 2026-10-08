@@ -1,13 +1,13 @@
 name = "Titanium"
-filename = "titanium-1.20.1-3.8.35.jar"
+filename = "titanium-1.20.1-3.8.32.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/1Ro7m06l/versions/LMqbm4db/titanium-1.20.1-3.8.35.jar"
+url = "https://cdn.modrinth.com/data/1Ro7m06l/versions/8krhHkrZ/titanium-1.20.1-3.8.32.jar"
 hash-format = "sha512"
-hash = "d15b0595b75156509c302aac481803068e4c2dca66dbe3808141879d66b41baa270d3b752c86da5308bcf80bfd2e387cb337ad1743eda81b2dff77c283025a3f"
+hash = "c4563176fad77499859691d8b5e18c35e08fec0a31f57f9e51f3538462f1ad738fb29335fc46d5857bffbdfc2dbd49bb32dc96614876d1f858b8cc81d6264057"
 
 [update]
 [update.modrinth]
 mod-id = "1Ro7m06l"
-version = "LMqbm4db"
+version = "8krhHkrZ"

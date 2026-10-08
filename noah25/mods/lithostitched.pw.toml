@@ -1,13 +1,13 @@
 name = "Lithostitched"
-filename = "lithostitched-forge-1.20.1-1.4.11.jar"
+filename = "lithostitched-forge-1.20.1-1.4.8.jar"
 side = "server"
 
 [download]
-url = "https://cdn.modrinth.com/data/XaDC71GB/versions/srPoHKt8/lithostitched-forge-1.20.1-1.4.11.jar"
+url = "https://cdn.modrinth.com/data/XaDC71GB/versions/GlnFzC0w/lithostitched-forge-1.20.1-1.4.8.jar"
 hash-format = "sha512"
-hash = "4e50a0fb4f054b429803cb20fc0820011b12098ebca1f17b1b0634cab832369e08446901d5e97fd35b01e99cf6066d20a16cc673c5b7bc8196568b3db67128c2"
+hash = "9688852cc13755d27be1ed174ea6a8f73af40378f0f8a7242e08a70a9f001780cbf8be4344b180e3047b41b241f61bd5c15f86631f299018ee4c9ffff58e57cf"
 
 [update]
 [update.modrinth]
 mod-id = "XaDC71GB"
-version = "srPoHKt8"
+version = "GlnFzC0w"

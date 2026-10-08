@@ -1,13 +1,13 @@
 name = "Oh The Trees You'll Grow"
-filename = "Oh-The-Trees-Youll-Grow-forge-1.20.1-1.7.2.jar"
+filename = "Oh-The-Trees-Youll-Grow-forge-1.20.1-1.3.13.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/g8NOG5OR/versions/Hhq43xPd/Oh-The-Trees-Youll-Grow-forge-1.20.1-1.7.2.jar"
+url = "https://cdn.modrinth.com/data/g8NOG5OR/versions/9kFsRFcf/Oh-The-Trees-Youll-Grow-forge-1.20.1-1.3.13.jar"
 hash-format = "sha512"
-hash = "c1447de2d08c115bf7e6433999e4bfb2af06c3d5e3f6d7c5ba8ba804f569e33fb828a4cc1e0c2ce9397f029e28c72c9dd141dbae96bf8afdd648960cc12eaaef"
+hash = "9da53f514d6119642bc633130b9d6d7c08d53dd71226c15d750f9f9f9d1e09de0d19553fe77c34b90a9ef5b7f3ee992b7b3d1d015f7bae1d63872dce589e8018"
 
 [update]
 [update.modrinth]
 mod-id = "g8NOG5OR"
-version = "Hhq43xPd"
+version = "9kFsRFcf"

@@ -1,13 +1,13 @@
 name = "Waystones"
-filename = "waystones-forge-1.20.1-14.1.21.jar"
+filename = "waystones-forge-1.20.1-14.1.13.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/LOpKHB2A/versions/Y0IgdaoP/waystones-forge-1.20.1-14.1.21.jar"
+url = "https://cdn.modrinth.com/data/LOpKHB2A/versions/8Mw54W1S/waystones-forge-1.20.1-14.1.13.jar"
 hash-format = "sha512"
-hash = "3798eef2f81c2f6066d9dc2dc22bbe9d1c4b62d5aa494c592ffe67ee7f4fb8021361505b3c0b1358d4f9af27e50b1f12d29afb3b4b0b362b5ab227e8be171047"
+hash = "b08ecce0bb47af4f88475a1c00bc06638c37ef14f4521fe1bc08937bd5667ead73a77c8f3a901a0a30bde55f26443b562f78615604b43074bc2eff8622140646"
 
 [update]
 [update.modrinth]
 mod-id = "LOpKHB2A"
-version = "Y0IgdaoP"
+version = "8Mw54W1S"
