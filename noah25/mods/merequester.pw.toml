@@ -1,13 +1,13 @@
 name = "ME Requester"
-filename = "merequester-forge-1.20.1-1.1.5.jar"
+filename = "merequester-forge-1.20.1-1.2.1.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/E6BFl96N/versions/Gm7oyczu/merequester-forge-1.20.1-1.1.5.jar"
+url = "https://cdn.modrinth.com/data/E6BFl96N/versions/69N8Y7WD/merequester-forge-1.20.1-1.2.1.jar"
 hash-format = "sha512"
-hash = "cc2ed5b2b947bf9327778c4bf4cd5324490060386169fe1a0b09fb78f4b4a46117c07a2355eaccd40abf834ce65c88b5e53a10ca3c374aa684d5ccb83457993f"
+hash = "1a8ed595acc1a1bb8c3d0c918540fa6ca1cab69bc23d80476374d7dba6c4febd0ea0d4e5f0d3d52b0d22084b6e9d73ad34c3b286ff09caf1f227bee46a2f8969"
 
 [update]
 [update.modrinth]
 mod-id = "E6BFl96N"
-version = "Gm7oyczu"
+version = "69N8Y7WD"

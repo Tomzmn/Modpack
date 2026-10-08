@@ -1,13 +1,13 @@
 name = "Oh The Biomes We've Gone"
-filename = "Oh-The-Biomes-Weve-Gone-Forge-1.6.2.jar"
+filename = "Oh-The-Biomes-Weve-Gone-Forge-1.8.1.jar"
 side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/NTi7d3Xc/versions/xNgi207c/Oh-The-Biomes-Weve-Gone-Forge-1.6.2.jar"
+url = "https://cdn.modrinth.com/data/NTi7d3Xc/versions/v0bVw0jU/Oh-The-Biomes-Weve-Gone-Forge-1.8.1.jar"
 hash-format = "sha512"
-hash = "89fd9807f58da1b213c45c61bd756794f3999e17da13130371bbc39813f01676dc8e2ab17d825d61476efc5c45189c7356c7056cbf709bf7dd6ae2ef24fe067d"
+hash = "679caf824479ec1ce97d51708a4f97a50f4550791f0d4c02be7d4f7c209131f94c30429fd36dd323b558b3071c0b46e24ef86befd16e29c8f62ff90ee98d44e4"
 
 [update]
 [update.modrinth]
 mod-id = "NTi7d3Xc"
-version = "xNgi207c"
+version = "v0bVw0jU"
