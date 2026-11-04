@@ -1,0 +1,15 @@
+# hors-version: 1.20.4 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "YUNG's Better Witch Huts"
+filename = "YungsBetterWitchHuts-1.20.4-Forge-3.4.3.jar"
+side = "server"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/t5FRdP87/versions/c5PmoGZz/YungsBetterWitchHuts-1.20.4-Forge-3.4.3.jar"
+hash-format = "sha512"
+hash = "feecabfc5d1dee9fa393246e68f5a8fe568796ee8dceee01d6f5138300a5714749c048d397d6e797e6934a18ca719ea5cc1ba0d3b69af0fbeeb077902e0be237"
+
+[update]
+[update.modrinth]
+mod-id = "t5FRdP87"
+version = "c5PmoGZz"

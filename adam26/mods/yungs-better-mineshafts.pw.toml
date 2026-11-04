@@ -1,0 +1,15 @@
+# hors-version: 1.20.4 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "YUNG's Better Mineshafts"
+filename = "YungsBetterMineshafts-1.20.4-Forge-4.4.2.jar"
+side = "server"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/HjmxVlSr/versions/JYbhvvYE/YungsBetterMineshafts-1.20.4-Forge-4.4.2.jar"
+hash-format = "sha512"
+hash = "6dcc7cd16c09a513f2fd83195ce691e55128af82e555c2f4ae0774e41891db92ac021152c9d9474b0f46dafd9c9a3863cb293e947a0d50aa50cd030f705dceb7"
+
+[update]
+[update.modrinth]
+mod-id = "HjmxVlSr"
+version = "JYbhvvYE"

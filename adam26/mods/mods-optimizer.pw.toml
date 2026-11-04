@@ -1,0 +1,13 @@
+name = "Mods Optimizer"
+filename = "mods_optimizer-forge-1.20.2-2.0.0.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/hlVtb1H0/versions/c7MvyPt0/mods_optimizer-forge-1.20.2-2.0.0.jar"
+hash-format = "sha512"
+hash = "3d9a6ee4bb71409f34a04421fd89a3efe398abf1f492e8aaee94d4b6fcd68d105aec9a42258e3cc7452bb5e2ce1b0e3afb7327b2e78d749681185ced0cdf8912"
+
+[update]
+[update.modrinth]
+mod-id = "hlVtb1H0"
+version = "c7MvyPt0"

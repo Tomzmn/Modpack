@@ -1,0 +1,15 @@
+# hors-version: 1.20.4 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "YUNG's Bridges"
+filename = "YungsBridges-1.20.4-Forge-4.4.2.jar"
+side = "server"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/Ht4BfYp6/versions/3zaZ4cxk/YungsBridges-1.20.4-Forge-4.4.2.jar"
+hash-format = "sha512"
+hash = "2094da9b1e77875407512db47e7d89930fbab4ab455b7031f05613e4f884995dfc5b9f42a619b8500aef4b81be54339f9d08e06b9a78a8196bd4b16c293f54b6"
+
+[update]
+[update.modrinth]
+mod-id = "Ht4BfYp6"
+version = "3zaZ4cxk"

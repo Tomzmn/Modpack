@@ -1,0 +1,13 @@
+name = "Balm"
+filename = "balm-forge-1.20.2-8.0.5.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/MBAkmtvl/versions/TGc6wvHK/balm-forge-1.20.2-8.0.5.jar"
+hash-format = "sha512"
+hash = "f58791dfda08b79ac4565010819547d1e67dae9795ad1254fb8bc24f8738bc4176a9c64270038dd35cf3ec93e96e8defcf3aa62aa1343055731f685d83854568"
+
+[update]
+[update.modrinth]
+mod-id = "MBAkmtvl"
+version = "TGc6wvHK"

@@ -1,0 +1,15 @@
+# hors-version: 1.20.6 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "AddonsLib"
+filename = "addonslib-forge-1.20.6-1.10.jar"
+side = "both"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/cl5ec0Qm/versions/Kietx8UB/addonslib-forge-1.20.6-1.10.jar"
+hash-format = "sha512"
+hash = "877130a0dad55c2c99b7f78a0897f59356c98c2ceca8e15911480074491a5b90d8dd39d589e325189c5c5ae1d50618fc9e2cea37bd131e95a16bf0b48dc0f06e"
+
+[update]
+[update.modrinth]
+mod-id = "cl5ec0Qm"
+version = "Kietx8UB"

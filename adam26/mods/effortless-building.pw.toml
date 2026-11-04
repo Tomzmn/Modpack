@@ -1,0 +1,15 @@
+# hors-version: 1.20.1 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "Effortless Building"
+filename = "effortlessbuilding-1.20.1-3.11.jar"
+side = "both"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/DYtfQEYj/versions/VczKVetv/effortlessbuilding-1.20.1-3.11.jar"
+hash-format = "sha512"
+hash = "dc0d5f3679193d6dd713601d6d8161348397ef574b17947fbf4e5b4ca3b97480bc3b7bbcf2f222c75068339d145eb2acbfab3d0416c809720961963f4c77a95c"
+
+[update]
+[update.modrinth]
+mod-id = "DYtfQEYj"
+version = "VczKVetv"

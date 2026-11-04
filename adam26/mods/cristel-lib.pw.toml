@@ -1,0 +1,13 @@
+name = "Cristel Lib"
+filename = "cristellib-1.2.0-forge.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/cl223EMc/versions/rXMG4HtT/cristellib-1.2.0-forge.jar"
+hash-format = "sha512"
+hash = "76b68647684366fa2455c82b47106c7028872771522eb7050941e85424cf0d1e13e409391eecf272a9b7ac50096dc7cde544ab0c3738cb42ddc90c4c37b96f28"
+
+[update]
+[update.modrinth]
+mod-id = "cl223EMc"
+version = "rXMG4HtT"

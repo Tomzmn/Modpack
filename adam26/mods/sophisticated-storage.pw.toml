@@ -1,0 +1,15 @@
+# hors-version: 1.20.1 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "Sophisticated Storage"
+filename = "sophisticatedstorage-1.20.1-1.5.15.2220.jar"
+side = "both"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/hMlaZH8f/versions/S0AtW2W5/sophisticatedstorage-1.20.1-1.5.15.2220.jar"
+hash-format = "sha512"
+hash = "cbdc48cc6c6072dac455cb4ea121f0520ab6ea3829321c9b651c9f3c3d18c35eaa503d690534f0c230dbb27b450d32c7b94404eef2c883bc47418e70241e79c5"
+
+[update]
+[update.modrinth]
+mod-id = "hMlaZH8f"
+version = "S0AtW2W5"

@@ -1,0 +1,15 @@
+# hors-version: 1.20.1 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "ME Requester"
+filename = "merequester-forge-1.20.1-1.2.1.jar"
+side = "both"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/E6BFl96N/versions/69N8Y7WD/merequester-forge-1.20.1-1.2.1.jar"
+hash-format = "sha512"
+hash = "1a8ed595acc1a1bb8c3d0c918540fa6ca1cab69bc23d80476374d7dba6c4febd0ea0d4e5f0d3d52b0d22084b6e9d73ad34c3b286ff09caf1f227bee46a2f8969"
+
+[update]
+[update.modrinth]
+mod-id = "E6BFl96N"
+version = "69N8Y7WD"

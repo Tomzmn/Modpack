@@ -1,0 +1,13 @@
+name = "Chimes"
+filename = "Chimes-v2.1.1-1.20.2-Forge.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/mjGOuygR/versions/NhQrku69/Chimes-v2.1.1-1.20.2-Forge.jar"
+hash-format = "sha512"
+hash = "a4b8a82571ebde666e28d30bff89e4160aa0420ed8c4503bc97228b1118c41605047d77444046d44b1221801ef9a5857ff2d17aafd073c004b338e624d484077"
+
+[update]
+[update.modrinth]
+mod-id = "mjGOuygR"
+version = "NhQrku69"

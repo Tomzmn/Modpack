@@ -1,0 +1,13 @@
+name = "Better Villages"
+filename = "bettervillage-forge-1.20.2-3.3.1-all.jar"
+side = "server"
+
+[download]
+url = "https://cdn.modrinth.com/data/dGVX5JbJ/versions/bGtqYxTq/bettervillage-forge-1.20.2-3.3.1-all.jar"
+hash-format = "sha512"
+hash = "01139afb521f75696f84d250a48ad9f4f6b6179896ded9671dccc04c55c879324c7f56a6970c3c958cba865d24b015053197be2c27dfe1d2dc46e32395bf8f5d"
+
+[update]
+[update.modrinth]
+mod-id = "dGVX5JbJ"
+version = "bGtqYxTq"

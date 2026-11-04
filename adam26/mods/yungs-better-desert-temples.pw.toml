@@ -1,0 +1,15 @@
+# hors-version: 1.20.4 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "YUNG's Better Desert Temples"
+filename = "YungsBetterDesertTemples-1.20.4-Forge-3.4.4.jar"
+side = "server"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/XNlO7sBv/versions/UR5dmUeN/YungsBetterDesertTemples-1.20.4-Forge-3.4.4.jar"
+hash-format = "sha512"
+hash = "d117ec195d2a6a3dd61b9944b89135e76a7604d01bbc00270892834f0764d0a59dc3c9423c840b51156f0dcf237769f467c4ecbd08706f82b070fc7485839b7d"
+
+[update]
+[update.modrinth]
+mod-id = "XNlO7sBv"
+version = "UR5dmUeN"

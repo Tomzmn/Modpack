@@ -1,0 +1,13 @@
+name = "WorldEdit"
+filename = "worldedit-mod-7.2.17.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/1u6JkXh5/versions/KGSgRLZU/worldedit-mod-7.2.17.jar"
+hash-format = "sha512"
+hash = "c86eeec59a1cbc2bbd42b8f750ac8f552d30a3387dc893a26e2f37d5840bacef8910e992249c5c09990a4d4eabebdee3e14028d1fbaf5d496417afdd4f149adc"
+
+[update]
+[update.modrinth]
+mod-id = "1u6JkXh5"
+version = "KGSgRLZU"

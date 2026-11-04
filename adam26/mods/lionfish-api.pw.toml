@@ -1,0 +1,15 @@
+# hors-version: 1.20.1 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "Lionfish API"
+filename = "lionfishapi-3.0.jar"
+side = "both"
+pin = true
+
+[download]
+hash-format = "sha1"
+hash = "79d0404f87fa066480b18c844c1e0b1c5f5475f9"
+mode = "metadata:curseforge"
+
+[update]
+[update.curseforge]
+file-id = 8095554
+project-id = 1001614

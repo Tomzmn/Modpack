@@ -1,0 +1,15 @@
+# hors-version: 1.20.1 (choisi pour Minecraft 1.20.2, hors des versions annoncées ; épinglé par l'appli)
+name = "Puzzles Lib"
+filename = "PuzzlesLib-v8.1.36-1.20.1-Forge.jar"
+side = "both"
+pin = true
+
+[download]
+url = "https://cdn.modrinth.com/data/QAGBst4M/versions/hOfDHA4g/PuzzlesLib-v8.1.36-1.20.1-Forge.jar"
+hash-format = "sha512"
+hash = "232c7c052c32d07bbb9daa02e16eab3ff45d41cf91488dca79e099965cb33983b09554c758c7e0df0516c33a9327880068ceb167ed3f0df60d590588aad55d99"
+
+[update]
+[update.modrinth]
+mod-id = "QAGBst4M"
+version = "hOfDHA4g"
