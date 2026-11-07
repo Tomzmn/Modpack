@@ -17,7 +17,6 @@ elle réveille le serveur, met les mods à jour, puis connecte le jeu.
 
 | Serveur | Adresse | Contenu | Mis à jour | Instance Prism |
 |---|---|---|---|---|
-| **adam26** | `adam26.tomz.fr` | Minecraft 1.20.2 · Forge 48.1.0 · 154 mods · 3 shaders | [04/11/2026](https://github.com/Tomzmn/Modpack/commits/main/adam26) | [adam26.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-adam26/adam26.zip) |
 | **captive25** | `captive25.tomz.fr` | Minecraft 1.21.10 · serveur de plugins : les plugins sont sur le serveur, rien à installer de plus | [07/10/2026](https://github.com/Tomzmn/Modpack/commits/main/captive25) | [captive25.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-captive25/captive25.zip) |
 | **jarry20** | `jarry20.tomz.fr` | Minecraft 1.15.2 · serveur de plugins : les plugins sont sur le serveur, rien à installer de plus | [07/10/2026](https://github.com/Tomzmn/Modpack/commits/main/jarry20) | [jarry20.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-jarry20/jarry20.zip) |
 | **jarry26** | `jarry26.tomz.fr` | Minecraft 1.21.1 · NeoForge 21.1.256 · 26 mods | [08/10/2026](https://github.com/Tomzmn/Modpack/commits/main/jarry26) | [jarry26.zip](https://github.com/Tomzmn/Modpack/releases/download/instance-jarry26/jarry26.zip) |
